@@ -1,0 +1,2872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralised Systems — From Centralized Control to Distributed Consensus</title>
+    <meta name="description" content="An interactive visual exploration of centralized, distributed, and decentralized system architectures — covering CAP theorem, conflict resolution, and core design patterns.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== DESIGN TOKENS ===== */
+        :root {
+            --bg-primary: #06080f;
+            --bg-secondary: #0c1120;
+            --bg-card: rgba(15, 23, 42, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(59, 130, 246, 0.3);
+
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-heading: #f1f5f9;
+
+            --accent-blue: #3b82f6;
+            --accent-violet: #8b5cf6;
+            --accent-teal: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-pink: #ec4899;
+
+            --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+            --gradient-card: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05));
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+
+            --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.3);
+            --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 3px; }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            background: rgba(6, 8, 15, 0.8);
+            border-bottom: 1px solid var(--border-glass);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 0.6rem 2rem;
+            background: rgba(6, 8, 15, 0.95);
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* ===== HERO SECTION ===== */
+        #hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 999px;
+            font-size: 0.85rem;
+            color: var(--accent-teal);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-teal);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-title .gradient-text {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 2rem;
+            background: var(--gradient-hero);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .hero-cta svg { transition: transform 0.2s; }
+        .hero-cta:hover svg { transform: translateX(3px); }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            animation: float-bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes float-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+
+        /* ===== SECTIONS ===== */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-blue);
+            margin-bottom: 1rem;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 20px;
+            height: 2px;
+            background: var(--accent-blue);
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+
+        /* ===== GLASS CARDS ===== */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-4px);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 0.6rem;
+        }
+
+        .card-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== GRID LAYOUTS ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* ===== CENTRALIZED SYSTEM ANIMATION ===== */
+        .arch-diagram {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin: 2rem 0;
+        }
+
+        .arch-diagram canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--radius-lg);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-glass);
+        }
+
+        /* ===== EXAMPLES LIST ===== */
+        .examples-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+
+        .example-tag {
+            padding: 0.35rem 0.9rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 999px;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        /* ===== FAILURE CASCADE ===== */
+        .failure-visual {
+            position: relative;
+            padding: 3rem 0;
+        }
+
+        .failure-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .failure-card {
+            background: rgba(244, 63, 94, 0.05);
+            border: 1px solid rgba(244, 63, 94, 0.15);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .failure-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent-rose);
+        }
+
+        .failure-card .failure-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .failure-card h4 {
+            color: var(--accent-rose);
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .failure-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== SOLUTION CARDS ===== */
+        .solution-card {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent-emerald);
+        }
+
+        .solution-card h4 {
+            color: var(--accent-emerald);
+            margin-bottom: 0.4rem;
+            font-weight: 700;
+        }
+
+        .solution-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== MECHANISM CARDS ===== */
+        .mechanism-card {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .mechanism-card .mech-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: white;
+        }
+
+        .mechanism-visual {
+            width: 100%;
+            height: 120px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .mechanism-visual canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== COMMUNICATION PATTERNS ===== */
+        .comm-card {
+            position: relative;
+        }
+
+        .comm-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 0.8rem;
+        }
+
+        .comm-badge.pro {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .comm-badge.con {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+        }
+
+        .comm-flow {
+            width: 100%;
+            height: 80px;
+            margin: 1rem 0;
+        }
+
+        .comm-flow canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== CAP THEOREM ===== */
+        .cap-container {
+            display: flex;
+            gap: 3rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .cap-visual {
+            flex: 1;
+            min-width: 320px;
+            position: relative;
+        }
+
+        .cap-triangle-wrap {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .cap-triangle-wrap canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .cap-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .cap-choice {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cap-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border-glass);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .cap-btn:hover { border-color: var(--accent-blue); }
+
+        .cap-btn.active-cp {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .cap-btn.active-ap {
+            border-color: var(--accent-violet);
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent-violet);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .cap-detail {
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            min-height: 200px;
+        }
+
+        .cap-detail h4 { margin-bottom: 0.8rem; font-size: 1.1rem; }
+
+        .cap-detail ul {
+            list-style: none;
+            margin: 0.8rem 0;
+        }
+
+        .cap-detail ul li {
+            padding: 0.3rem 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .cap-detail ul li::before {
+            content: '→ ';
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        /* ===== CONFLICT RESOLUTION SANDBOX ===== */
+        .sandbox-container {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sandbox-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-hero);
+        }
+
+        .sandbox-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--radius-md);
+        }
+
+        .sandbox-controls label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .sandbox-controls select {
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .sandbox-btn {
+            padding: 0.6rem 1.4rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-partition {
+            background: var(--accent-rose);
+            color: white;
+        }
+
+        .btn-partition:hover { background: #e11d48; transform: translateY(-1px); }
+
+        .btn-reconnect {
+            background: var(--accent-emerald);
+            color: white;
+        }
+
+        .btn-reconnect:hover { background: #059669; transform: translateY(-1px); }
+
+        .nodes-area {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .sandbox-node {
+            flex: 1;
+            max-width: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .sandbox-node.in-sync { border-color: rgba(16, 185, 129, 0.4); }
+        .sandbox-node.isolated { border-color: rgba(244, 63, 94, 0.4); }
+        .sandbox-node.conflict { border-color: rgba(245, 158, 11, 0.5); }
+
+        .sandbox-node h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .sandbox-node .node-region {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .sandbox-node input[type="text"] {
+            width: 80%;
+            padding: 0.6rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .sandbox-node input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .sandbox-node .save-btn {
+            padding: 0.45rem 1.2rem;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sandbox-node .save-btn:hover { background: #2563eb; }
+
+        .node-status {
+            display: inline-block;
+            padding: 0.25rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.8rem;
+        }
+
+        .node-status.synced { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+        .node-status.isolated-status { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); }
+        .node-status.conflict-status { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+
+        .node-timestamp {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-family: var(--font-mono);
+        }
+
+        .network-pipe {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            position: relative;
+            margin: 0 1rem;
+            flex-shrink: 0;
+        }
+
+        .network-pipe .pipe-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 2px;
+            background: var(--accent-emerald);
+            transition: background 0.5s;
+        }
+
+        .network-pipe.broken .pipe-bg {
+            background: var(--accent-rose);
+        }
+
+        .network-pipe .pipe-pulse {
+            position: absolute;
+            top: -3px;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            animation: pipe-flow 1.5s ease-in-out infinite;
+        }
+
+        .network-pipe.broken .pipe-pulse { display: none; }
+
+        @keyframes pipe-flow {
+            0% { left: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { left: calc(100% - 10px); opacity: 0; }
+        }
+
+        .conflict-panel {
+            display: none;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .conflict-panel.show { display: block; animation: slide-in 0.3s ease; }
+
+        .conflict-panel h4 { color: var(--accent-amber); margin-bottom: 0.5rem; }
+
+        .conflict-resolve-btns { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; }
+
+        .conflict-resolve-btns button {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .resolve-btn-india { background: var(--accent-blue); color: white; }
+        .resolve-btn-us { background: var(--accent-violet); color: white; }
+
+        .sandbox-log {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.4);
+            border-radius: var(--radius-sm);
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .sandbox-log .log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .sandbox-log .log-entry .log-time { color: var(--accent-teal); }
+
+        /* ===== COMPARISON TABLE ===== */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 1rem 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .comparison-table th {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .comparison-table td { color: var(--text-secondary); }
+
+        .comparison-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ===== THREE-COLUMN COMPARISON ===== */
+        .sys-compare {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .sys-col {
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sys-col::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .sys-col.centralized {
+            background: rgba(244, 63, 94, 0.05);
+            border: 1px solid rgba(244, 63, 94, 0.15);
+        }
+        .sys-col.centralized::before { background: var(--accent-rose); }
+
+        .sys-col.distributed {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+        .sys-col.distributed::before { background: var(--accent-blue); }
+
+        .sys-col.decentralized {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+        }
+        .sys-col.decentralized::before { background: var(--accent-violet); }
+
+        .sys-col h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .sys-col .sys-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+        }
+
+        .sys-col .sys-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-glass);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .sys-col .sys-item:last-child { border-bottom: none; }
+
+        .sys-col .sys-item strong {
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+
+        /* ===== SCENARIO COMPARISON ===== */
+        .scenario-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 2.5rem;
+        }
+
+        .scenario-box h4 {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .scenario-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .scenario-step {
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-glass);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .scenario-step h5 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .scenario-step p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .scenario-step .scenario-flow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-teal);
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ===== DECISION GUIDE ===== */
+        .decision-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .decision-node {
+            display: flex;
+            align-items: stretch;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .decision-question {
+            flex: 1;
+            min-width: 280px;
+            padding: 1.5rem;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .decision-question .q-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .decision-question p {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .decision-answers {
+            display: flex;
+            gap: 1rem;
+            flex: 1.5;
+            min-width: 280px;
+        }
+
+        .decision-answer {
+            flex: 1;
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-glass);
+            background: var(--bg-card);
+        }
+
+        .decision-answer .answer-label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .decision-answer p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .decision-answer.yes { border-left: 3px solid var(--accent-emerald); }
+        .decision-answer.no { border-left: 3px solid var(--accent-amber); }
+
+        /* ===== TAKEAWAYS ===== */
+        .takeaway-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .takeaway-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .takeaway-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .takeaway-card:nth-child(1)::before { background: var(--accent-blue); }
+        .takeaway-card:nth-child(2)::before { background: var(--accent-violet); }
+        .takeaway-card:nth-child(3)::before { background: var(--accent-teal); }
+        .takeaway-card:nth-child(4)::before { background: var(--accent-emerald); }
+        .takeaway-card:nth-child(5)::before { background: var(--accent-amber); }
+        .takeaway-card:nth-child(6)::before { background: var(--accent-pink); }
+
+        .takeaway-card .takeaway-num {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .takeaway-card h4 {
+            font-size: 1rem;
+            color: var(--text-heading);
+            margin-bottom: 0.5rem;
+        }
+
+        .takeaway-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== DIVIDER ===== */
+        .section-divider {
+            width: 60px;
+            height: 3px;
+            background: var(--gradient-hero);
+            border-radius: 2px;
+            margin: 0 auto;
+        }
+
+        /* ===== EVENTUAL CONSISTENCY VISUAL ===== */
+        .ec-visual {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .ec-visual h4 {
+            color: var(--accent-teal);
+            margin-bottom: 1rem;
+        }
+
+        .ec-timeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            position: relative;
+            padding: 1rem 0;
+        }
+
+        .ec-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .ec-step::after {
+            content: '';
+            position: absolute;
+            top: 22px;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-rose), var(--accent-amber), var(--accent-emerald));
+            z-index: 0;
+        }
+
+        .ec-step:last-child::after { display: none; }
+
+        .ec-dot {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin: 0 auto 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ec-step:nth-child(1) .ec-dot { background: rgba(244, 63, 94, 0.2); border: 2px solid var(--accent-rose); }
+        .ec-step:nth-child(2) .ec-dot { background: rgba(245, 158, 11, 0.2); border: 2px solid var(--accent-amber); }
+        .ec-step:nth-child(3) .ec-dot { background: rgba(6, 182, 212, 0.2); border: 2px solid var(--accent-teal); }
+        .ec-step:nth-child(4) .ec-dot { background: rgba(16, 185, 129, 0.2); border: 2px solid var(--accent-emerald); }
+
+        .ec-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            section { padding: 4rem 1.2rem; }
+            nav { padding: 0.8rem 1rem; }
+            .nav-links { display: none; }
+            .cap-container { flex-direction: column; }
+            .nodes-area { flex-direction: column; }
+            .network-pipe { 
+                width: 4px; height: 40px; margin: 0.5rem 0; 
+            }
+            .network-pipe .pipe-pulse {
+                animation-name: pipe-flow-vert;
+            }
+            @keyframes pipe-flow-vert {
+                0% { top: 0; left: 50%; transform: translateX(-50%); opacity: 0; }
+                50% { opacity: 1; }
+                100% { top: calc(100% - 10px); left: 50%; transform: translateX(-50%); opacity: 0; }
+            }
+            .sandbox-controls { flex-direction: column; text-align: center; }
+            .decision-node { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="navbar">
+    <span class="nav-brand">Decentralised Systems</span>
+    <ul class="nav-links">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#centralized">Centralized</a></li>
+        <li><a href="#breakdown">Breakdown</a></li>
+        <li><a href="#decentralization">Decentralized</a></li>
+        <li><a href="#mechanisms">Mechanisms</a></li>
+        <li><a href="#communication">Communication</a></li>
+        <li><a href="#cap">CAP</a></li>
+        <li><a href="#conflicts">Conflicts</a></li>
+        <li><a href="#comparison">Compare</a></li>
+        <li><a href="#guide">Guide</a></li>
+    </ul>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Interactive Presentation
+        </div>
+        <h1 class="hero-title">
+            From Centralized Control<br>
+            to <span class="gradient-text">Decentralised Consensus</span>
+        </h1>
+        <p class="hero-subtitle">
+            On October 4, 2021, Facebook went dark for 6 hours — taking WhatsApp, Instagram, 
+            and Messenger with it. A single misconfiguration brought down services for 3.5 billion users. 
+            This is the story of why decentralization matters.
+        </p>
+        <a href="#centralized" class="hero-cta">
+            Begin the Journey
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+    <div class="scroll-indicator">
+        <span>Scroll to explore</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+</section>
+
+<!-- ===== SECTION 1: CENTRALIZED SYSTEMS ===== -->
+<section id="centralized">
+    <div class="reveal">
+        <span class="section-label">Chapter 01</span>
+        <h2 class="section-title">The Centralized Model</h2>
+        <p class="section-desc">
+            A system where a single authority controls all data, processing, and decision-making. 
+            All requests flow through one central service — one source of truth, one point of control.
+        </p>
+    </div>
+
+    <div class="arch-diagram reveal">
+        <canvas id="centralized-canvas"></canvas>
+    </div>
+
+    <div class="grid-3 reveal">
+        <div class="glass-card">
+            <div class="card-icon" style="background: rgba(59, 130, 246, 0.15);">🏗️</div>
+            <h3 class="card-title">Single Source of Truth</h3>
+            <p class="card-text">One database owns all data. Synchronous request flow: Client → Server → DB → Response. Tight coupling between all application layers.</p>
+        </div>
+        <div class="glass-card">
+            <div class="card-icon" style="background: rgba(16, 185, 129, 0.15);">✅</div>
+            <h3 class="card-title">Strong Consistency</h3>
+            <p class="card-text">ACID transactions guarantee correctness. Easier transaction management, centralized logging, and monitoring. Vertical scaling by upgrading CPU/RAM.</p>
+        </div>
+        <div class="glass-card">
+            <div class="card-icon" style="background: rgba(139, 92, 246, 0.15);">⚡</div>
+            <h3 class="card-title">Real-World Examples</h3>
+            <p class="card-text">Banking core systems, payment gateways like Stripe & Razorpay, SaaS platforms like Google Docs, and centralized exchange order-matching engines.</p>
+            <div class="examples-list">
+                <span class="example-tag">Stripe</span>
+                <span class="example-tag">Razorpay</span>
+                <span class="example-tag">Google Docs</span>
+                <span class="example-tag">Banking Systems</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 2: WHERE IT BREAKS ===== -->
+<section id="breakdown">
+    <div class="reveal">
+        <span class="section-label">Chapter 02</span>
+        <h2 class="section-title">Where Centralization Breaks Down</h2>
+        <p class="section-desc">
+            Every centralized system carries inherent risks. When the single point of control fails, 
+            the entire system goes with it — and with it, user trust.
+        </p>
+    </div>
+
+    <div class="failure-items reveal">
+        <div class="failure-card">
+            <div class="failure-icon">💥</div>
+            <h4>Single Point of Failure</h4>
+            <p>System outage means the entire service becomes unavailable. No fallback, no recovery path — just darkness.</p>
+        </div>
+        <div class="failure-card">
+            <div class="failure-icon">📈</div>
+            <h4>Scalability Bottleneck</h4>
+            <p>The central node becomes the performance ceiling. Vertical scaling hits physical hardware limits eventually.</p>
+        </div>
+        <div class="failure-card">
+            <div class="failure-icon">🔒</div>
+            <h4>Trust Dependency</h4>
+            <p>Users must fully trust the central authority with their data, privacy, and service continuity.</p>
+        </div>
+        <div class="failure-card">
+            <div class="failure-icon">🚫</div>
+            <h4>Censorship & Control</h4>
+            <p>The authority can restrict, modify, or revoke access unilaterally. Users have no recourse.</p>
+        </div>
+        <div class="failure-card">
+            <div class="failure-icon">🛡️</div>
+            <h4>Security Risk</h4>
+            <p>One breach can compromise the entire system. A single attack surface for all data and services.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 3: ENTER DECENTRALIZATION ===== -->
+<section id="decentralization">
+    <div class="reveal">
+        <span class="section-label">Chapter 03</span>
+        <h2 class="section-title">Enter: Decentralized Systems</h2>
+        <p class="section-desc">
+            A system where control, data, and computation are distributed across multiple independent nodes, 
+            instead of relying on a single central authority. Multiple nodes collaborate — each can handle requests, 
+            store data, and no single point controls the entire system.
+        </p>
+    </div>
+
+    <div class="arch-diagram reveal">
+        <canvas id="decentralized-canvas"></canvas>
+    </div>
+
+    <div class="grid-2 reveal">
+        <div class="solution-card">
+            <h4>🔄 No Single Point of Failure</h4>
+            <p>If one node fails, others continue serving requests. The system degrades gracefully instead of collapsing entirely.</p>
+        </div>
+        <div class="solution-card">
+            <h4>📊 Horizontal Scaling</h4>
+            <p>Add more nodes instead of upgrading one server. Scale out, not up — virtually unlimited growth potential.</p>
+        </div>
+        <div class="solution-card">
+            <h4>🌍 Reduced Latency</h4>
+            <p>Serve users from geographically closer nodes. Data travels shorter distances, responses arrive faster.</p>
+        </div>
+        <div class="solution-card">
+            <h4>🛡️ Improved Resilience</h4>
+            <p>Failures are isolated, not system-wide. A node going down is a local event, not a global catastrophe.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 4: CORE MECHANISMS ===== -->
+<section id="mechanisms">
+    <div class="reveal">
+        <span class="section-label">Chapter 04</span>
+        <h2 class="section-title">Core Mechanisms</h2>
+        <p class="section-desc">
+            How do decentralized systems actually work under the hood? Four fundamental mechanisms 
+            enable nodes to collaborate effectively without central coordination.
+        </p>
+    </div>
+
+    <div class="grid-2 reveal">
+        <div class="glass-card mechanism-card">
+            <div class="mech-number" style="background: var(--accent-blue);">1</div>
+            <div class="mechanism-visual">
+                <canvas id="mech-replication"></canvas>
+            </div>
+            <h3 class="card-title">Replication</h3>
+            <p class="card-text">Same data stored across multiple nodes. Improves availability and fault tolerance. Leader → follower replicas keep data synchronized.</p>
+            <div class="examples-list">
+                <span class="example-tag">Leader-Follower</span>
+                <span class="example-tag">Multi-Leader</span>
+                <span class="example-tag">Leaderless</span>
+            </div>
+        </div>
+        <div class="glass-card mechanism-card">
+            <div class="mech-number" style="background: var(--accent-violet);">2</div>
+            <div class="mechanism-visual">
+                <canvas id="mech-sharding"></canvas>
+            </div>
+            <h3 class="card-title">Partitioning (Sharding)</h3>
+            <p class="card-text">Data split across nodes — each handles a subset. Typically uses hash-based routing like <code style="color: var(--accent-teal); font-family: var(--font-mono); font-size: 0.85rem;">user_id % N</code> to determine which node stores data.</p>
+            <div class="examples-list">
+                <span class="example-tag">Hash Partitioning</span>
+                <span class="example-tag">Range Partitioning</span>
+            </div>
+        </div>
+        <div class="glass-card mechanism-card">
+            <div class="mech-number" style="background: var(--accent-teal);">3</div>
+            <div class="mechanism-visual">
+                <canvas id="mech-coordination"></canvas>
+            </div>
+            <h3 class="card-title">Distributed Coordination</h3>
+            <p class="card-text">Nodes need to agree on state. Tools like ZooKeeper and etcd handle leader election, configuration management, and distributed consensus.</p>
+            <div class="examples-list">
+                <span class="example-tag">ZooKeeper</span>
+                <span class="example-tag">etcd</span>
+                <span class="example-tag">Raft</span>
+            </div>
+        </div>
+        <div class="glass-card mechanism-card">
+            <div class="mech-number" style="background: var(--accent-emerald);">4</div>
+            <div class="mechanism-visual">
+                <canvas id="mech-loadbalance"></canvas>
+            </div>
+            <h3 class="card-title">Load Distribution</h3>
+            <p class="card-text">Requests spread across nodes using load balancers and service discovery. No single node bears all the traffic — work is shared evenly.</p>
+            <div class="examples-list">
+                <span class="example-tag">Round Robin</span>
+                <span class="example-tag">Weighted</span>
+                <span class="example-tag">Least Connections</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 5: COMMUNICATION PATTERNS ===== -->
+<section id="communication">
+    <div class="reveal">
+        <span class="section-label">Chapter 05</span>
+        <h2 class="section-title">Communication Patterns</h2>
+        <p class="section-desc">
+            How do nodes talk to each other? Four distinct communication models, 
+            each with different trade-offs in coupling, latency, and complexity.
+        </p>
+    </div>
+
+    <div class="grid-2 reveal">
+        <div class="glass-card comm-card">
+            <h3 class="card-title">⚡ Synchronous</h3>
+            <p class="card-text">Direct request-response communication. Client waits for server reply. Simple but creates tight coupling.</p>
+            <div class="examples-list">
+                <span class="example-tag">REST APIs</span>
+                <span class="example-tag">gRPC</span>
+            </div>
+            <div>
+                <span class="comm-badge pro">✔ Simple to implement</span>
+                <span class="comm-badge con">⚠ Tight coupling</span>
+            </div>
+        </div>
+        <div class="glass-card comm-card">
+            <h3 class="card-title">📨 Asynchronous</h3>
+            <p class="card-text">Messages and events instead of direct calls. Producers and consumers operate independently through message brokers.</p>
+            <div class="examples-list">
+                <span class="example-tag">Kafka</span>
+                <span class="example-tag">RabbitMQ</span>
+            </div>
+            <div>
+                <span class="comm-badge pro">✔ Loose coupling</span>
+                <span class="comm-badge pro">✔ Better scalability</span>
+                <span class="comm-badge con">⚠ Harder debugging</span>
+            </div>
+        </div>
+        <div class="glass-card comm-card">
+            <h3 class="card-title">🔗 Peer-to-Peer (P2P)</h3>
+            <p class="card-text">Nodes communicate directly with each other — no central coordinator needed. Every node is both client and server.</p>
+            <div class="examples-list">
+                <span class="example-tag">BitTorrent</span>
+                <span class="example-tag">Blockchain Networks</span>
+            </div>
+            <div>
+                <span class="comm-badge pro">✔ No central dependency</span>
+                <span class="comm-badge con">⚠ Discovery complexity</span>
+            </div>
+        </div>
+        <div class="glass-card comm-card">
+            <h3 class="card-title">🌊 Gossip Protocols</h3>
+            <p class="card-text">Nodes randomly share state with other nodes. Information spreads epidemically — eventually all nodes converge to the same state.</p>
+            <div class="examples-list">
+                <span class="example-tag">Cassandra</span>
+                <span class="example-tag">Distributed Clusters</span>
+            </div>
+            <div>
+                <span class="comm-badge pro">✔ Highly resilient</span>
+                <span class="comm-badge con">⚠ Eventually consistent</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 6: CAP THEOREM ===== -->
+<section id="cap">
+    <div class="reveal">
+        <span class="section-label">Chapter 06</span>
+        <h2 class="section-title">The CAP Trade-off</h2>
+        <p class="section-desc">
+            In distributed systems, network failures are inevitable. When a network partition occurs, 
+            the system must choose between consistency and availability — you can't have both.
+        </p>
+    </div>
+
+    <div class="cap-container reveal">
+        <div class="cap-visual">
+            <div class="cap-triangle-wrap">
+                <canvas id="cap-canvas"></canvas>
+            </div>
+        </div>
+        <div class="cap-info">
+            <div class="cap-choice">
+                <button class="cap-btn active-cp" id="cap-btn-cp" onclick="showCapDetail('cp')">
+                    🔵 Consistency (CP)
+                </button>
+                <button class="cap-btn" id="cap-btn-ap" onclick="showCapDetail('ap')">
+                    🟣 Availability (AP)
+                </button>
+            </div>
+            <div class="cap-detail" id="cap-detail">
+                <h4 style="color: var(--accent-blue);">Consistency + Partition Tolerance (CP)</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject some requests to ensure all responses are 100% correct.</p>
+                <ul>
+                    <li>Strong correctness guarantee</li>
+                    <li>Reduced availability during partitions</li>
+                    <li>Banking transactions, distributed locks</li>
+                </ul>
+                <div class="examples-list" style="margin-top: 1rem;">
+                    <span class="example-tag">ZooKeeper</span>
+                    <span class="example-tag">etcd</span>
+                    <span class="example-tag">Banking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eventual Consistency -->
+    <div class="ec-visual reveal" style="margin-top: 3rem;">
+        <h4>🔄 How AP Systems Recover — Eventual Consistency</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+            Data may be inconsistent temporarily, but converges over time. Updates propagate asynchronously, 
+            and nodes sync gradually. <em style="color: var(--accent-teal);">Think: a post is visible instantly, but likes sync later.</em>
+        </p>
+        <div class="ec-timeline">
+            <div class="ec-step">
+                <div class="ec-dot">✏️</div>
+                <div class="ec-label">Write occurs<br>on Node A</div>
+            </div>
+            <div class="ec-step">
+                <div class="ec-dot">📡</div>
+                <div class="ec-label">Propagating<br>asynchronously</div>
+            </div>
+            <div class="ec-step">
+                <div class="ec-dot">🔄</div>
+                <div class="ec-label">Nodes syncing<br>gradually</div>
+            </div>
+            <div class="ec-step">
+                <div class="ec-dot">✅</div>
+                <div class="ec-label">Eventually<br>consistent</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 7: CONFLICT RESOLUTION ===== -->
+<section id="conflicts">
+    <div class="reveal">
+        <span class="section-label">Chapter 07</span>
+        <h2 class="section-title">Conflict Resolution</h2>
+        <p class="section-desc">
+            When multiple nodes update the same data concurrently, conflicts are inevitable. 
+            How a system resolves these conflicts defines its reliability and user experience.
+        </p>
+    </div>
+
+    <!-- Resolution Strategies -->
+    <div class="grid-2 reveal">
+        <div class="glass-card">
+            <h3 class="card-title" style="color: var(--accent-amber);">⏱️ Last Write Wins (LWW)</h3>
+            <p class="card-text">Latest timestamp wins. Simple but can lose data silently.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">India writes "Alice" at 10:01, US writes "Alicia" at 10:02 → "Alicia" wins. "Alice" is lost.</p>
+            <div class="examples-list">
+                <span class="example-tag">Cassandra</span>
+                <span class="example-tag">DynamoDB (optional)</span>
+            </div>
+        </div>
+        <div class="glass-card">
+            <h3 class="card-title" style="color: var(--accent-violet);">🔢 Versioning / Vector Clocks</h3>
+            <p class="card-text">Each update carries version info. System detects conflicts instead of silently overwriting.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Node A → v1 → "Alice", Node B → v1 → "Alicia" → Conflict detected, both preserved.</p>
+            <div class="examples-list">
+                <span class="example-tag">Amazon Dynamo</span>
+            </div>
+        </div>
+        <div class="glass-card">
+            <h3 class="card-title" style="color: var(--accent-teal);">🔀 Merge Strategies</h3>
+            <p class="card-text">Combine updates intelligently at the application level. Works when updates touch different fields.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">One node updates phone, another updates address → merge both, no conflict.</p>
+            <div class="examples-list">
+                <span class="example-tag">Google Docs</span>
+                <span class="example-tag">CRDTs</span>
+            </div>
+        </div>
+        <div class="glass-card">
+            <h3 class="card-title" style="color: var(--accent-blue);">👤 Manual Resolution</h3>
+            <p class="card-text">System flags the conflict and a human resolves it. Most accurate but slower.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Git: two developers edit the same line → merge conflict → developer chooses.</p>
+            <div class="examples-list">
+                <span class="example-tag">Git</span>
+                <span class="example-tag">SVN</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Sandbox -->
+    <div class="sandbox-container reveal" style="margin-top: 3rem;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.3rem;">🧪 Interactive Conflict Sandbox</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+            Simulate a network partition between two nodes. Edit data independently, then reconnect to see conflict resolution in action.
+        </p>
+
+        <div class="sandbox-controls">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <label>Resolution Strategy:</label>
+                <select id="strategy-select">
+                    <option value="lww">Last Write Wins (LWW)</option>
+                    <option value="version">Versioning (Manual Resolve)</option>
+                    <option value="merge">Merge (Field-based)</option>
+                </select>
+            </div>
+            <button class="sandbox-btn btn-partition" id="network-btn" onclick="togglePartition()">
+                ⚡ Break Network
+            </button>
+        </div>
+
+        <div class="nodes-area">
+            <div class="sandbox-node in-sync" id="node-india">
+                <h4>🇮🇳 Node India</h4>
+                <div class="node-region">Mumbai Region</div>
+                <input type="text" id="india-input" value="Alice" />
+                <br>
+                <button class="save-btn" onclick="saveNode('india')">Save</button>
+                <br>
+                <span class="node-status synced" id="india-status">● In Sync</span>
+                <div class="node-timestamp" id="india-time">—</div>
+            </div>
+
+            <div class="network-pipe" id="network-pipe">
+                <div class="pipe-bg"></div>
+                <div class="pipe-pulse"></div>
+            </div>
+
+            <div class="sandbox-node in-sync" id="node-us">
+                <h4>🇺🇸 Node US</h4>
+                <div class="node-region">Virginia Region</div>
+                <input type="text" id="us-input" value="Alice" />
+                <br>
+                <button class="save-btn" onclick="saveNode('us')">Save</button>
+                <br>
+                <span class="node-status synced" id="us-status">● In Sync</span>
+                <div class="node-timestamp" id="us-time">—</div>
+            </div>
+        </div>
+
+        <div class="conflict-panel" id="conflict-panel">
+            <h4>⚠️ Conflict Detected!</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;" id="conflict-msg">Two different versions exist after reconnection.</p>
+            <div class="conflict-resolve-btns" id="conflict-btns">
+                <button class="resolve-btn-india" onclick="resolveConflict('india')">Keep India Version</button>
+                <button class="resolve-btn-us" onclick="resolveConflict('us')">Keep US Version</button>
+            </div>
+        </div>
+
+        <div class="sandbox-log" id="sandbox-log"></div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 8: DISTRIBUTED VS DECENTRALIZED ===== -->
+<section id="dist-vs-dec">
+    <div class="reveal">
+        <span class="section-label">Chapter 08</span>
+        <h2 class="section-title">Distributed vs. Decentralized</h2>
+        <p class="section-desc">
+            These terms are often used interchangeably — but they are NOT the same. 
+            The key difference lies in <strong style="color: var(--text-heading);">control and ownership</strong>.
+        </p>
+    </div>
+
+    <div class="grid-2 reveal">
+        <div class="glass-card" style="border-left: 3px solid var(--accent-blue);">
+            <h3 class="card-title" style="color: var(--accent-blue);">🔹 Distributed System</h3>
+            <p class="card-text" style="margin-bottom: 0.8rem;">Computation/data spread across multiple nodes. Focus is on <strong>architecture and scaling</strong>. May still have central control and coordination.</p>
+            <div class="examples-list">
+                <span class="example-tag">Microservices</span>
+                <span class="example-tag">Cloud Services (AWS)</span>
+                <span class="example-tag">Distributed DBs</span>
+            </div>
+        </div>
+        <div class="glass-card" style="border-left: 3px solid var(--accent-violet);">
+            <h3 class="card-title" style="color: var(--accent-violet);">🔹 Decentralized System</h3>
+            <p class="card-text" style="margin-bottom: 0.8rem;">No single controlling authority. Focus is on <strong>control and ownership</strong>. Nodes are independent, autonomous, and often untrusted.</p>
+            <div class="examples-list">
+                <span class="example-tag">Bitcoin</span>
+                <span class="example-tag">Ethereum</span>
+                <span class="example-tag">BitTorrent</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="reveal" style="margin-top: 2rem;">
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th style="color: var(--accent-blue);">Distributed</th>
+                    <th style="color: var(--accent-violet);">Decentralized</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong style="color: var(--text-primary);">Control</strong></td>
+                    <td>Can be centrally controlled</td>
+                    <td>No central authority</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--text-primary);">Ownership</strong></td>
+                    <td>Single organization</td>
+                    <td>Multiple participants</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--text-primary);">Coordination</strong></td>
+                    <td>Often centralized (orchestrator)</td>
+                    <td>Distributed consensus</td>
+                </tr>
+                <tr>
+                    <td><strong style="color: var(--text-primary);">Trust Model</strong></td>
+                    <td>Trusted nodes</td>
+                    <td>Trustless / semi-trusted</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 9: SYSTEM COMPARISON ===== -->
+<section id="comparison">
+    <div class="reveal">
+        <span class="section-label">Chapter 09</span>
+        <h2 class="section-title">System Comparison</h2>
+        <p class="section-desc">
+            A side-by-side look at how centralized, distributed, and decentralized architectures 
+            differ in setup, behavior, and trade-offs.
+        </p>
+    </div>
+
+    <div class="sys-compare reveal">
+        <div class="sys-col centralized">
+            <h3 style="color: var(--accent-rose);">🟢 Centralized</h3>
+            <div class="sys-subtitle">Traditional Architecture</div>
+            <div class="sys-item"><strong>Setup</strong>One backend server, one database</div>
+            <div class="sys-item"><strong>Flow</strong>User → Server → DB → Response</div>
+            <div class="sys-item"><strong>Consistency</strong>Instantly consistent (ACID)</div>
+            <div class="sys-item"><strong>Scaling</strong>Vertical — upgrade the machine</div>
+            <div class="sys-item"><strong>Risk</strong>Server overload, DB bottleneck, SPOF</div>
+        </div>
+        <div class="sys-col distributed">
+            <h3 style="color: var(--accent-blue);">🔵 Distributed</h3>
+            <div class="sys-subtitle">Scaled Architecture</div>
+            <div class="sys-item"><strong>Setup</strong>Multiple servers, shared/distributed DB, load balancer</div>
+            <div class="sys-item"><strong>Flow</strong>User → Load Balancer → Any Server → DB</div>
+            <div class="sys-item"><strong>Consistency</strong>Strong (if DB supports it)</div>
+            <div class="sys-item"><strong>Scaling</strong>Horizontal — add more nodes</div>
+            <div class="sys-item"><strong>Risk</strong>Central control, coordinator bottleneck</div>
+        </div>
+        <div class="sys-col decentralized">
+            <h3 style="color: var(--accent-violet);">🟣 Decentralized</h3>
+            <div class="sys-subtitle">Autonomous Architecture</div>
+            <div class="sys-item"><strong>Setup</strong>Independent nodes, partitioned/replicated data</div>
+            <div class="sys-item"><strong>Flow</strong>User → Any node, nodes sync async</div>
+            <div class="sys-item"><strong>Consistency</strong>Eventual consistency</div>
+            <div class="sys-item"><strong>Scaling</strong>Massively horizontal</div>
+            <div class="sys-item"><strong>Risk</strong>Conflict resolution, complexity</div>
+        </div>
+    </div>
+
+    <!-- Scenario -->
+    <div class="scenario-box reveal">
+        <h4>🔁 Same Scenario Across Systems — <em style="color: var(--accent-teal);">User updates their name</em></h4>
+        <div class="scenario-steps">
+            <div class="scenario-step">
+                <h5 style="color: var(--accent-rose);">Centralized</h5>
+                <p>Immediate update everywhere. Single write to single DB.</p>
+                <div class="scenario-flow">UPDATE users SET name='Bob' WHERE id=1;<br>→ Done. All see "Bob" instantly.</div>
+            </div>
+            <div class="scenario-step">
+                <h5 style="color: var(--accent-blue);">Distributed</h5>
+                <p>Update via shared database. Load balancer routes to any server, but DB is central.</p>
+                <div class="scenario-flow">Server 3 → Shared DB → commit<br>→ All servers read "Bob" from DB.</div>
+            </div>
+            <div class="scenario-step">
+                <h5 style="color: var(--accent-violet);">Decentralized</h5>
+                <p>Some nodes may show old data temporarily until async sync completes.</p>
+                <div class="scenario-flow">Node A writes "Bob" locally<br>→ Propagates... 50ms... 200ms...<br>→ Eventually all nodes show "Bob"</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 10: DECISION GUIDE ===== -->
+<section id="guide">
+    <div class="reveal">
+        <span class="section-label">Chapter 10</span>
+        <h2 class="section-title">When to Use What</h2>
+        <p class="section-desc">
+            Choosing the right architecture isn't about which is "best" — it's about which is 
+            right for your specific requirements. Use this decision framework.
+        </p>
+    </div>
+
+    <div class="decision-flow reveal">
+        <div class="decision-node">
+            <div class="decision-question">
+                <div class="q-number">1</div>
+                <p>Do you need strong, immediate consistency for every read?</p>
+            </div>
+            <div class="decision-answers">
+                <div class="decision-answer yes">
+                    <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
+                    <p>Use <strong>Centralized</strong> or <strong>CP Distributed</strong>. Banking, inventory, financial ledgers.</p>
+                </div>
+                <div class="decision-answer no">
+                    <div class="answer-label" style="color: var(--accent-amber);">→ Not always</div>
+                    <p>Eventual consistency may work. Continue to question 2.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="decision-node">
+            <div class="decision-question">
+                <div class="q-number">2</div>
+                <p>Does a single organization own and control all nodes?</p>
+            </div>
+            <div class="decision-answers">
+                <div class="decision-answer yes">
+                    <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
+                    <p>Use <strong>Distributed</strong>. Microservices, cloud-native apps, CDNs.</p>
+                </div>
+                <div class="decision-answer no">
+                    <div class="answer-label" style="color: var(--accent-amber);">❌ No</div>
+                    <p>Multiple parties with no central trust? Continue to question 3.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="decision-node">
+            <div class="decision-question">
+                <div class="q-number">3</div>
+                <p>Do participants need to operate without trusting each other?</p>
+            </div>
+            <div class="decision-answers">
+                <div class="decision-answer yes">
+                    <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
+                    <p>Use <strong>Decentralized</strong>. Blockchain, P2P networks, DAOs, open protocols.</p>
+                </div>
+                <div class="decision-answer no">
+                    <div class="answer-label" style="color: var(--accent-amber);">→ Partial trust</div>
+                    <p>Consider <strong>Federated</strong> or <strong>Hybrid</strong> models. Email (SMTP), Mastodon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SECTION 11: KEY TAKEAWAYS ===== -->
+<section id="takeaways">
+    <div class="reveal">
+        <span class="section-label">Chapter 11</span>
+        <h2 class="section-title">Key Takeaways</h2>
+        <p class="section-desc">
+            The core insights to carry forward from this exploration of system architectures.
+        </p>
+    </div>
+
+    <div class="takeaway-grid reveal">
+        <div class="takeaway-card">
+            <div class="takeaway-num">01</div>
+            <h4>Centralization is simple, not safe</h4>
+            <p>Easy to build but carries single-point-of-failure risk that can bring down everything at once.</p>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-num">02</div>
+            <h4>Distributed ≠ Decentralized</h4>
+            <p>Distributed is about architecture (scaling). Decentralized is about control (who owns the system).</p>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-num">03</div>
+            <h4>CAP is a trade-off, not a choice</h4>
+            <p>Network partitions will happen. You must decide: reject requests (CP) or allow stale reads (AP).</p>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-num">04</div>
+            <h4>Conflicts are inevitable</h4>
+            <p>In any system where multiple nodes write data, conflicts will occur. The resolution strategy matters more than prevention.</p>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-num">05</div>
+            <h4>No architecture is universally "best"</h4>
+            <p>The right choice depends on consistency needs, trust model, scale requirements, and organizational structure.</p>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-num">06</div>
+            <h4>Eventual consistency is not broken</h4>
+            <p>Many of the world's largest systems (DNS, social media, CDNs) run on eventual consistency — and work just fine.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <p>Decentralised Systems — An Interactive Exploration</p>
+    <p style="margin-top: 0.5rem;">Built for learning. Scroll back up to <a href="#hero">start again</a>.</p>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ========================================
+// SCROLL ANIMATIONS (IntersectionObserver)
+// ========================================
+const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ========================================
+// NAVBAR SCROLL EFFECT
+// ========================================
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ========================================
+// HERO PARTICLE CANVAS
+// ========================================
+(function initHeroCanvas() {
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animId;
+    const PARTICLE_COUNT = 80;
+    const CONNECTION_DIST = 150;
+
+    function resize() {
+        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+        canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * canvas.offsetWidth,
+                y: Math.random() * canvas.offsetHeight,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                r: Math.random() * 2 + 1,
+                color: ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981'][Math.floor(Math.random() * 4)]
+            });
+        }
+    }
+
+    function draw() {
+        const w = canvas.offsetWidth;
+        const h = canvas.offsetHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        // Connections
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECTION_DIST) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 * (1 - dist / CONNECTION_DIST)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Particles
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > w) p.vx *= -1;
+            if (p.y < 0 || p.y > h) p.vy *= -1;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        });
+
+        animId = requestAnimationFrame(draw);
+    }
+
+    resize();
+    createParticles();
+    draw();
+    window.addEventListener('resize', () => { resize(); createParticles(); });
+})();
+
+// ========================================
+// CENTRALIZED SYSTEM ANIMATION (Hub-Spoke)
+// ========================================
+(function initCentralizedCanvas() {
+    const canvas = document.getElementById('centralized-canvas');
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let time = 0;
+
+    function resize() {
+        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+        canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function draw() {
+        const w = canvas.offsetWidth;
+        const h = canvas.offsetHeight;
+        ctx.clearRect(0, 0, w, h);
+        time += 0.015;
+
+        const cx = w / 2;
+        const cy = h / 2;
+        const nodeCount = 8;
+        const radius = Math.min(w, h) * 0.35;
+
+        // Draw connections
+        for (let i = 0; i < nodeCount; i++) {
+            const angle = (i / nodeCount) * Math.PI * 2 - Math.PI / 2;
+            const nx = cx + Math.cos(angle) * radius;
+            const ny = cy + Math.sin(angle) * radius;
+
+            // Animated pulse along line
+            const pulsePos = (time * 0.8 + i * 0.3) % 1;
+            const px = cx + (nx - cx) * pulsePos;
+            const py = cy + (ny - cy) * pulsePos;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(nx, ny);
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Pulse dot
+            ctx.beginPath();
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#3b82f6';
+            ctx.fill();
+
+            // Outer node
+            ctx.beginPath();
+            ctx.arc(nx, ny, 14, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.fill();
+            ctx.stroke();
+
+            // Node label
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Client ${i + 1}`, nx, ny + 28);
+        }
+
+        // Central node (glowing)
+        const glow = Math.sin(time * 2) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(59, 130, 246, ${0.2 * glow})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SERVER', cx, cy);
+
+        animId = requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+})();
+
+// ========================================
+// DECENTRALIZED SYSTEM ANIMATION (Mesh)
+// ========================================
+(function initDecentralizedCanvas() {
+    const canvas = document.getElementById('decentralized-canvas');
+    const ctx = canvas.getContext('2d');
+    let time = 0;
+
+    function resize() {
+        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+        canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    const nodePositions = [
+        { rx: 0.15, ry: 0.3 }, { rx: 0.3, ry: 0.15 }, { rx: 0.5, ry: 0.25 },
+        { rx: 0.7, ry: 0.15 }, { rx: 0.85, ry: 0.3 }, { rx: 0.2, ry: 0.6 },
+        { rx: 0.4, ry: 0.5 }, { rx: 0.6, ry: 0.55 }, { rx: 0.8, ry: 0.6 },
+        { rx: 0.35, ry: 0.8 }, { rx: 0.55, ry: 0.78 }, { rx: 0.75, ry: 0.82 }
+    ];
+
+    function draw() {
+        const w = canvas.offsetWidth;
+        const h = canvas.offsetHeight;
+        ctx.clearRect(0, 0, w, h);
+        time += 0.012;
+
+        const nodes = nodePositions.map(n => ({
+            x: n.rx * w + Math.sin(time + n.rx * 10) * 5,
+            y: n.ry * h + Math.cos(time + n.ry * 10) * 5
+        }));
+
+        // Mesh connections
+        const colors = ['#8b5cf6', '#06b6d4', '#10b981'];
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[i].x - nodes[j].x;
+                const dy = nodes[i].y - nodes[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxDist = Math.min(w, h) * 0.45;
+                if (dist < maxDist) {
+                    const alpha = 0.12 * (1 - dist / maxDist);
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Pulse
+                    const pulsePos = (time + i * 0.2 + j * 0.15) % 2;
+                    if (pulsePos < 1) {
+                        const px = nodes[i].x + (nodes[j].x - nodes[i].x) * pulsePos;
+                        const py = nodes[i].y + (nodes[j].y - nodes[i].y) * pulsePos;
+                        ctx.beginPath();
+                        ctx.arc(px, py, 2, 0, Math.PI * 2);
+                        ctx.fillStyle = colors[(i + j) % 3];
+                        ctx.globalAlpha = 0.6;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
+        }
+
+        // Nodes
+        nodes.forEach((n, i) => {
+            const pulse = Math.sin(time * 2 + i) * 0.2 + 0.8;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(139, 92, 246, ${0.15 * pulse})`;
+            ctx.strokeStyle = `rgba(139, 92, 246, ${0.5 * pulse})`;
+            ctx.lineWidth = 1.5;
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = `rgba(226, 232, 240, ${0.7 * pulse})`;
+            ctx.font = 'bold 8px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`N${i + 1}`, n.x, n.y);
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+})();
+
+// ========================================
+// MECHANISM MINI-CANVASES
+// ========================================
+function initMechCanvases() {
+    // Replication Canvas
+    const repCanvas = document.getElementById('mech-replication');
+    if (repCanvas) {
+        const ctx = repCanvas.getContext('2d');
+        let time = 0;
+        function resize() {
+            repCanvas.width = repCanvas.offsetWidth * window.devicePixelRatio;
+            repCanvas.height = repCanvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        function draw() {
+            const w = repCanvas.offsetWidth, h = repCanvas.offsetHeight;
+            ctx.clearRect(0, 0, w, h);
+            time += 0.02;
+
+            // Leader
+            const lx = w * 0.25, ly = h * 0.5;
+            ctx.beginPath(); ctx.arc(lx, ly, 16, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.3)'; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('LEADER', lx, ly);
+
+            // Followers
+            const followers = [{x: w*0.6, y: h*0.25}, {x: w*0.6, y: h*0.5}, {x: w*0.6, y: h*0.75}];
+            followers.forEach((f, i) => {
+                // Arrow
+                const pulseProg = (time + i * 0.4) % 1;
+                const px = lx + (f.x - lx) * pulseProg;
+                const py = ly + (f.y - ly) * pulseProg;
+                ctx.beginPath(); ctx.moveTo(lx + 18, ly); ctx.lineTo(f.x - 14, f.y);
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#3b82f6'; ctx.fill();
+
+                ctx.beginPath(); ctx.arc(f.x, f.y, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; ctx.lineWidth = 1;
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.font = '7px Inter'; ctx.fillText(`F${i+1}`, f.x, f.y);
+            });
+
+            // Data blocks on right
+            const blockX = w * 0.82;
+            followers.forEach((f, i) => {
+                const alpha = (Math.sin(time * 2 + i) + 1) / 2 * 0.5 + 0.3;
+                ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`;
+                ctx.fillRect(blockX - 10, f.y - 6, 20, 12);
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'; ctx.lineWidth = 0.5;
+                ctx.strokeRect(blockX - 10, f.y - 6, 20, 12);
+            });
+
+            requestAnimationFrame(draw);
+        }
+        resize(); draw(); window.addEventListener('resize', resize);
+    }
+
+    // Sharding Canvas
+    const shardCanvas = document.getElementById('mech-sharding');
+    if (shardCanvas) {
+        const ctx = shardCanvas.getContext('2d');
+        let time = 0;
+        function resize() {
+            shardCanvas.width = shardCanvas.offsetWidth * window.devicePixelRatio;
+            shardCanvas.height = shardCanvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        function draw() {
+            const w = shardCanvas.offsetWidth, h = shardCanvas.offsetHeight;
+            ctx.clearRect(0, 0, w, h);
+            time += 0.02;
+            const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+            const shardW = (w - 60) / 4;
+
+            for (let i = 0; i < 4; i++) {
+                const sx = 15 + i * (shardW + 10);
+                const sy = 15;
+                const sh = h - 30;
+                const pulse = Math.sin(time * 1.5 + i) * 0.15 + 0.85;
+
+                ctx.fillStyle = `rgba(${i===0?'139,92,246':i===1?'6,182,212':i===2?'16,185,129':'245,158,11'}, ${0.1 * pulse})`;
+                ctx.strokeStyle = `${colors[i]}40`;
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.roundRect(sx, sy, shardW, sh, 4); ctx.fill(); ctx.stroke();
+
+                // Data rows
+                for (let r = 0; r < 3; r++) {
+                    const ry = sy + 20 + r * 18;
+                    ctx.fillStyle = `${colors[i]}30`;
+                    ctx.fillRect(sx + 5, ry, shardW - 10, 10);
+                }
+
+                ctx.fillStyle = colors[i]; ctx.font = 'bold 8px Inter'; ctx.textAlign = 'center';
+                ctx.fillText(`Shard ${i+1}`, sx + shardW/2, h - 5);
+            }
+
+            requestAnimationFrame(draw);
+        }
+        resize(); draw(); window.addEventListener('resize', resize);
+    }
+
+    // Coordination Canvas
+    const coordCanvas = document.getElementById('mech-coordination');
+    if (coordCanvas) {
+        const ctx = coordCanvas.getContext('2d');
+        let time = 0;
+        function resize() {
+            coordCanvas.width = coordCanvas.offsetWidth * window.devicePixelRatio;
+            coordCanvas.height = coordCanvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        function draw() {
+            const w = coordCanvas.offsetWidth, h = coordCanvas.offsetHeight;
+            ctx.clearRect(0, 0, w, h);
+            time += 0.02;
+
+            const nodes = [
+                {x: w*0.2, y: h*0.5, label: 'N1'},
+                {x: w*0.5, y: h*0.2, label: 'N2'},
+                {x: w*0.8, y: h*0.5, label: 'N3'},
+                {x: w*0.5, y: h*0.8, label: 'N4'}
+            ];
+
+            const leaderIdx = Math.floor(time / 3) % 4;
+
+            // Connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i+1; j < nodes.length; j++) {
+                    ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.strokeStyle = 'rgba(6, 182, 212, 0.1)'; ctx.lineWidth = 1; ctx.stroke();
+                }
+            }
+
+            nodes.forEach((n, i) => {
+                const isLeader = i === leaderIdx;
+                const r = isLeader ? 16 : 12;
+                const pulse = Math.sin(time * 3 + i) * 0.2 + 0.8;
+
+                ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = isLeader ? 'rgba(6, 182, 212, 0.3)' : 'rgba(6, 182, 212, 0.1)';
+                ctx.strokeStyle = isLeader ? '#06b6d4' : 'rgba(6, 182, 212, 0.3)';
+                ctx.lineWidth = isLeader ? 2 : 1;
+                ctx.fill(); ctx.stroke();
+
+                if (isLeader) {
+                    ctx.beginPath(); ctx.arc(n.x, n.y, r + 5, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(6, 182, 212, ${0.2 * pulse})`;
+                    ctx.lineWidth = 1; ctx.stroke();
+                }
+
+                ctx.fillStyle = isLeader ? '#06b6d4' : '#94a3b8';
+                ctx.font = `${isLeader ? 'bold ' : ''}8px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(isLeader ? '★' : n.label, n.x, n.y);
+            });
+
+            requestAnimationFrame(draw);
+        }
+        resize(); draw(); window.addEventListener('resize', resize);
+    }
+
+    // Load Balance Canvas
+    const lbCanvas = document.getElementById('mech-loadbalance');
+    if (lbCanvas) {
+        const ctx = lbCanvas.getContext('2d');
+        let time = 0;
+        function resize() {
+            lbCanvas.width = lbCanvas.offsetWidth * window.devicePixelRatio;
+            lbCanvas.height = lbCanvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        function draw() {
+            const w = lbCanvas.offsetWidth, h = lbCanvas.offsetHeight;
+            ctx.clearRect(0, 0, w, h);
+            time += 0.02;
+
+            // LB
+            const lbx = w * 0.3, lby = h * 0.5;
+            ctx.beginPath(); ctx.arc(lbx, lby, 16, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.2)'; ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2;
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 6px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('LB', lbx, lby);
+
+            // Incoming requests
+            for (let i = 0; i < 3; i++) {
+                const prog = (time * 0.5 + i * 0.35) % 1;
+                const rx = w * 0.05 + (lbx - w * 0.05 - 18) * prog;
+                ctx.beginPath(); ctx.arc(rx, lby - 10 + i * 10, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981'; ctx.globalAlpha = 0.7; ctx.fill(); ctx.globalAlpha = 1;
+            }
+
+            // Servers
+            const servers = [{x: w*0.7, y: h*0.2}, {x: w*0.7, y: h*0.5}, {x: w*0.7, y: h*0.8}];
+            servers.forEach((s, i) => {
+                const prog = (time * 0.5 + i * 0.3) % 1;
+                const px = lbx + 18 + (s.x - lbx - 30) * prog;
+                const py = lby + (s.y - lby) * prog;
+                ctx.beginPath(); ctx.moveTo(lbx + 18, lby); ctx.lineTo(s.x - 14, s.y);
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.12)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981'; ctx.fill();
+
+                ctx.beginPath(); ctx.arc(s.x, s.y, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.12)'; ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)'; ctx.lineWidth = 1;
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.font = '7px Inter'; ctx.fillText(`S${i+1}`, s.x, s.y);
+            });
+
+            requestAnimationFrame(draw);
+        }
+        resize(); draw(); window.addEventListener('resize', resize);
+    }
+}
+
+initMechCanvases();
+
+// ========================================
+// CAP THEOREM TRIANGLE
+// ========================================
+(function initCapCanvas() {
+    const canvas = document.getElementById('cap-canvas');
+    const ctx = canvas.getContext('2d');
+    let time = 0;
+    let activeChoice = 'cp';
+
+    function resize() {
+        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+        canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    window.capSetChoice = function(choice) { activeChoice = choice; };
+
+    function draw() {
+        const w = canvas.offsetWidth, h = canvas.offsetHeight;
+        ctx.clearRect(0, 0, w, h);
+        time += 0.015;
+
+        const cx = w / 2;
+        const size = Math.min(w, h) * 0.35;
+        const topY = h * 0.15;
+
+        // Triangle vertices
+        const C = { x: cx, y: topY, label: 'Consistency' };
+        const A = { x: cx - size, y: topY + size * 1.7, label: 'Availability' };
+        const P = { x: cx + size, y: topY + size * 1.7, label: 'Partition\nTolerance' };
+
+        // Triangle edges
+        const edges = [
+            { from: C, to: A, id: 'ca' },
+            { from: C, to: P, id: 'cp_edge' },
+            { from: A, to: P, id: 'ap' }
+        ];
+
+        // Draw triangle fill
+        ctx.beginPath();
+        ctx.moveTo(C.x, C.y);
+        ctx.lineTo(A.x, A.y);
+        ctx.lineTo(P.x, P.y);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.03)';
+        ctx.fill();
+
+        // Draw edges with highlights
+        edges.forEach(e => {
+            const isHighlighted = (activeChoice === 'cp' && (e.id === 'cp_edge'))
+                || (activeChoice === 'ap' && (e.id === 'ap'));
+            ctx.beginPath();
+            ctx.moveTo(e.from.x, e.from.y);
+            ctx.lineTo(e.to.x, e.to.y);
+            ctx.strokeStyle = isHighlighted
+                ? (activeChoice === 'cp' ? '#3b82f6' : '#8b5cf6')
+                : 'rgba(148, 163, 184, 0.2)';
+            ctx.lineWidth = isHighlighted ? 3 : 1;
+            ctx.stroke();
+
+            if (isHighlighted) {
+                const prog = (time * 0.6) % 1;
+                const px = e.from.x + (e.to.x - e.from.x) * prog;
+                const py = e.from.y + (e.to.y - e.from.y) * prog;
+                ctx.beginPath();
+                ctx.arc(px, py, 4, 0, Math.PI * 2);
+                ctx.fillStyle = activeChoice === 'cp' ? '#3b82f6' : '#8b5cf6';
+                ctx.fill();
+            }
+        });
+
+        // Vertices
+        [C, A, P].forEach((v, i) => {
+            const isActive = (activeChoice === 'cp' && (i === 0 || i === 2))
+                || (activeChoice === 'ap' && (i === 1 || i === 2));
+            const color = isActive
+                ? (activeChoice === 'cp' ? '#3b82f6' : '#8b5cf6')
+                : '#64748b';
+            const r = isActive ? 22 : 16;
+
+            if (isActive) {
+                ctx.beginPath();
+                ctx.arc(v.x, v.y, r + 6, 0, Math.PI * 2);
+                ctx.fillStyle = (activeChoice === 'cp' ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)');
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = isActive ? `${color}30` : 'rgba(100,116,139,0.1)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = isActive ? 2.5 : 1;
+            ctx.fill();
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = isActive ? '#e2e8f0' : '#94a3b8';
+            ctx.font = `${isActive ? 'bold ' : ''}${isActive ? '11' : '10'}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const lines = v.label.split('\n');
+            lines.forEach((line, li) => {
+                ctx.fillText(line, v.x, v.y + (li - (lines.length-1)/2) * 13);
+            });
+        });
+
+        // "P is given" label
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.font = 'italic 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('(Partition Tolerance is mandatory)', cx, P.y + 40);
+
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+})();
+
+function showCapDetail(type) {
+    const detail = document.getElementById('cap-detail');
+    const btnCp = document.getElementById('cap-btn-cp');
+    const btnAp = document.getElementById('cap-btn-ap');
+
+    btnCp.className = 'cap-btn' + (type === 'cp' ? ' active-cp' : '');
+    btnAp.className = 'cap-btn' + (type === 'ap' ? ' active-ap' : '');
+
+    window.capSetChoice(type);
+
+    if (type === 'cp') {
+        detail.innerHTML = `
+            <h4 style="color: var(--accent-blue);">Consistency + Partition Tolerance (CP)</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject some requests to ensure all responses are 100% correct.</p>
+            <ul>
+                <li>Strong correctness guarantee</li>
+                <li>Reduced availability during partitions</li>
+                <li>Banking transactions, distributed locks</li>
+            </ul>
+            <div class="examples-list" style="margin-top: 1rem;">
+                <span class="example-tag">ZooKeeper</span>
+                <span class="example-tag">etcd</span>
+                <span class="example-tag">Banking</span>
+            </div>
+        `;
+    } else {
+        detail.innerHTML = `
+            <h4 style="color: var(--accent-violet);">Availability + Partition Tolerance (AP)</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Always respond to requests, even if data may be temporarily stale.</p>
+            <ul>
+                <li>High availability, always responsive</li>
+                <li>Temporary inconsistency between nodes</li>
+                <li>Social media, DNS, content platforms</li>
+            </ul>
+            <div class="examples-list" style="margin-top: 1rem;">
+                <span class="example-tag">Cassandra</span>
+                <span class="example-tag">DynamoDB</span>
+                <span class="example-tag">DNS</span>
+            </div>
+        `;
+    }
+}
+
+// ========================================
+// CONFLICT RESOLUTION SANDBOX
+// ========================================
+(function initSandbox() {
+    let networkUp = true;
+    const state = {
+        india: { value: 'Alice', ts: 0 },
+        us: { value: 'Alice', ts: 0 }
+    };
+
+    const indiaInput = document.getElementById('india-input');
+    const usInput = document.getElementById('us-input');
+    const indiaStatus = document.getElementById('india-status');
+    const usStatus = document.getElementById('us-status');
+    const indiaTime = document.getElementById('india-time');
+    const usTime = document.getElementById('us-time');
+    const nodeIndia = document.getElementById('node-india');
+    const nodeUs = document.getElementById('node-us');
+    const networkPipe = document.getElementById('network-pipe');
+    const networkBtn = document.getElementById('network-btn');
+    const conflictPanel = document.getElementById('conflict-panel');
+    const conflictMsg = document.getElementById('conflict-msg');
+    const strategySelect = document.getElementById('strategy-select');
+    const logEl = document.getElementById('sandbox-log');
+
+    function log(msg) {
+        const time = new Date().toLocaleTimeString();
+        logEl.innerHTML = `<div class="log-entry"><span class="log-time">[${time}]</span> ${msg}</div>` + logEl.innerHTML;
+    }
+
+    log('System initialized. Both nodes in sync.');
+
+    window.togglePartition = function() {
+        networkUp = !networkUp;
+        if (networkUp) {
+            networkPipe.classList.remove('broken');
+            networkBtn.textContent = '⚡ Break Network';
+            networkBtn.className = 'sandbox-btn btn-partition';
+            log('🔗 Network reconnected. Attempting sync...');
+            syncNodes();
+        } else {
+            networkPipe.classList.add('broken');
+            networkBtn.textContent = '🔗 Reconnect';
+            networkBtn.className = 'sandbox-btn btn-reconnect';
+            setStatus('india', 'isolated');
+            setStatus('us', 'isolated');
+            log('💥 Network partition! Nodes are isolated.');
+        }
+    };
+
+    window.saveNode = function(nodeId) {
+        const input = nodeId === 'india' ? indiaInput : usInput;
+        const newVal = input.value;
+        const now = Date.now();
+        state[nodeId] = { value: newVal, ts: now };
+
+        const timeEl = nodeId === 'india' ? indiaTime : usTime;
+        timeEl.textContent = new Date(now).toLocaleTimeString();
+
+        log(`✏️ Node ${nodeId.toUpperCase()} saved: "${newVal}"`);
+
+        if (networkUp) {
+            const other = nodeId === 'india' ? 'us' : 'india';
+            state[other] = { value: newVal, ts: now };
+            (nodeId === 'india' ? usInput : indiaInput).value = newVal;
+            (nodeId === 'india' ? usTime : indiaTime).textContent = new Date(now).toLocaleTimeString();
+            setStatus('india', 'sync');
+            setStatus('us', 'sync');
+            log(`🔄 Synced to ${other.toUpperCase()}: "${newVal}"`);
+        }
+    };
+
+    function syncNodes() {
+        if (state.india.value === state.us.value) {
+            setStatus('india', 'sync');
+            setStatus('us', 'sync');
+            log('✅ No conflict. Nodes already in sync.');
+            return;
+        }
+
+        const strategy = strategySelect.value;
+
+        if (strategy === 'lww') {
+            const winner = state.india.ts > state.us.ts ? 'india' : 'us';
+            const loser = winner === 'india' ? 'us' : 'india';
+            const winVal = state[winner].value;
+            state.india.value = winVal;
+            state.us.value = winVal;
+            indiaInput.value = winVal;
+            usInput.value = winVal;
+            setStatus('india', 'sync');
+            setStatus('us', 'sync');
+            log(`⚖️ LWW resolved: "${winVal}" (${winner.toUpperCase()} won, ${loser.toUpperCase()} data overwritten)`);
+        } else if (strategy === 'version') {
+            setStatus('india', 'conflict');
+            setStatus('us', 'conflict');
+            conflictMsg.textContent = `India: "${state.india.value}" vs US: "${state.us.value}" — Choose which to keep.`;
+            conflictPanel.classList.add('show');
+            networkBtn.disabled = true;
+            log(`⚠️ Conflict detected! India="${state.india.value}" vs US="${state.us.value}". Manual resolution required.`);
+        } else {
+            // Merge — just keep both values concatenated for demo
+            const merged = `${state.india.value} + ${state.us.value}`;
+            state.india.value = merged;
+            state.us.value = merged;
+            indiaInput.value = merged;
+            usInput.value = merged;
+            setStatus('india', 'sync');
+            setStatus('us', 'sync');
+            log(`🔀 Merge resolved: combined both → "${merged}"`);
+        }
+    }
+
+    window.resolveConflict = function(winnerId) {
+        const winVal = state[winnerId].value;
+        state.india.value = winVal;
+        state.us.value = winVal;
+        indiaInput.value = winVal;
+        usInput.value = winVal;
+        setStatus('india', 'sync');
+        setStatus('us', 'sync');
+        conflictPanel.classList.remove('show');
+        networkBtn.disabled = false;
+        log(`👤 Manually resolved: kept ${winnerId.toUpperCase()} version → "${winVal}"`);
+    };
+
+    function setStatus(nodeId, status) {
+        const statusEl = nodeId === 'india' ? indiaStatus : usStatus;
+        const nodeEl = nodeId === 'india' ? nodeIndia : nodeUs;
+
+        nodeEl.classList.remove('in-sync', 'isolated', 'conflict');
+
+        if (status === 'sync') {
+            statusEl.textContent = '● In Sync';
+            statusEl.className = 'node-status synced';
+            nodeEl.classList.add('in-sync');
+        } else if (status === 'isolated') {
+            statusEl.textContent = '◉ Isolated';
+            statusEl.className = 'node-status isolated-status';
+            nodeEl.classList.add('isolated');
+        } else if (status === 'conflict') {
+            statusEl.textContent = '⚠ Conflict';
+            statusEl.className = 'node-status conflict-status';
+            nodeEl.classList.add('conflict');
+        }
+    }
+})();
+
+// ========================================
+// SMOOTH SCROLL FOR ANCHOR LINKS
+// ========================================
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+
+// ========================================
+// ACTIVE NAV LINK ON SCROLL
+// ========================================
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (window.scrollY >= sectionTop) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+</body>
+</html>
