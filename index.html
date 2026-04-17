@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decentralized Systems — A Practical Engineering Guide</title>
-    <meta name="description" content="A practical guide to centralized, distributed, and decentralized systems using one shared parcel-tracking use case. Covers replication, partitioning, coordination, CAP theorem, and conflict resolution.">
+    <meta name="description" content="A deep, structured, and engineer-friendly guide to modern system architectures — from first principles to real-world trade-offs. Covers centralized, distributed, and decentralized systems, CAP theorem, conflict resolution, and core design patterns.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         /* ===== DESIGN TOKENS ===== */
@@ -1390,7 +1390,7 @@
         <li><a href="#communication">Communication</a></li>
         <li><a href="#cap">CAP</a></li>
         <li><a href="#conflicts">Conflicts</a></li>
-        <li><a href="#dist-vs-dec">Why Decentralize</a></li>
+        <li><a href="#dist-vs-dec">Compare</a></li>
         <li><a href="#guide">Guide</a></li>
     </ul>
 </nav>
@@ -1408,7 +1408,8 @@
             <span class="gradient-text">Systems</span>
         </h1>
         <p class="hero-subtitle">
-            A practical guide to modern system architectures, explained through one shared cross-border parcel-tracking network.
+            A deep, structured, and engineer-friendly guide to modern system architectures — 
+            from first principles to real-world trade-offs.
         </p>
         <a href="#centralized" class="hero-cta">
             Begin the Journey
@@ -1427,8 +1428,9 @@
         <span class="section-label">Introduction</span>
         <h2 class="section-title">Why Systems Evolve</h2>
         <p class="section-desc">
-            Modern systems rarely stay simple. They move from centralized to distributed when scale and geography demand it,
-            and only move toward decentralization when multiple independent parties need shared control over the same truth.
+            Modern software systems rarely stay simple for long. What begins as a single-server application 
+            often evolves into a globally distributed system — and in some cases, further into a 
+            decentralized architecture. This evolution is driven not by trends, but by real constraints.
         </p>
     </div>
 
@@ -1456,16 +1458,17 @@
     </div>
 
     <div class="callout-quote reveal">
-        Systems do not become decentralized because it sounds modern. They become decentralized when centralized ownership becomes the problem.
+        Systems don't become distributed or decentralized by default — they are forced into it by constraints.
     </div>
 
     <!-- Unified Example -->
     <div class="example-scenario reveal">
-        <h4>🔗 Unified Example: Shared Cross-Border Parcel Tracking</h4>
-        <p>Throughout this guide, we'll use one practical example: <strong style="color: var(--text-heading);">a parcel-tracking network shared by a merchant, warehouse, carrier, customs, and customer app</strong>.
-            We follow parcel <strong style="color: var(--text-heading);">PKG-88421</strong> from scan to delivery and see how each architecture handles the same event stream.</p>
+        <h4>🔗 Unified Example: Global User Profile Service</h4>
+        <p>Throughout this guide, we'll use one consistent example: <strong style="color: var(--text-heading);">a global user profile service</strong>. 
+            A user updates their profile (name, email, address), and we trace how each architecture handles that update — 
+            from write to read, from consistency to conflict.</p>
         <div class="scenario-flow">
-            Merchant creates parcel → Warehouse scans → Carrier updates route → Customs clears → Customer checks status
+            User updates profile → System processes write → Other users read the data → What do they see?
         </div>
     </div>
 
@@ -1497,8 +1500,9 @@
         <span class="section-label">Chapter 01</span>
         <h2 class="section-title">Centralized Systems</h2>
         <p class="section-desc">
-            A centralized system keeps data, logic, and control under one owner. It is the default starting point because
-            one company can move fast, keep consistency simple, and avoid coordination overhead.
+            A centralized system is one where all data, logic, and control reside in a single system 
+            or tightly coupled cluster. It's the default starting point because it's simple to build 
+            and easy to reason about.
         </p>
     </div>
 
@@ -1509,25 +1513,26 @@
     <!-- How it works -->
     <div class="example-scenario reveal">
         <h4>📋 How It Works — In Our Example</h4>
-        <p>The merchant or support team updates parcel <strong style="color: var(--text-heading);">PKG-88421</strong>. The request goes to one backend, one database stores the latest status, and every reader trusts that single system.</p>
-        <div class="scenario-flow">Tracking App → API Server → Parcel Database → Response</div>
+        <p>A user updates their profile. The request goes to a single backend. The database is updated immediately. 
+            All future reads return the updated value.</p>
+        <div class="scenario-flow">Client → API Server → Database → Response</div>
     </div>
 
     <div class="grid-3 reveal">
         <div class="glass-card">
             <div class="card-icon" style="background: rgba(59, 130, 246, 0.15);">🏗️</div>
             <h3 class="card-title">Single Source of Truth</h3>
-            <p class="card-text">One parcel database owns the shipment timeline. The merchant, operations team, and customer app all read from the same authority.</p>
+            <p class="card-text">One database owns all data. Synchronous request-response model with tight coupling between components.</p>
         </div>
         <div class="glass-card">
             <div class="card-icon" style="background: rgba(16, 185, 129, 0.15);">✅</div>
             <h3 class="card-title">Strong Consistency</h3>
-            <p class="card-text">ACID transactions keep each parcel update correct. A customs hold or delivery confirmation is visible immediately after commit.</p>
+            <p class="card-text">ACID transactions guarantee correctness. No replication lag, no conflicting writes. Transactions enforce correctness.</p>
         </div>
         <div class="glass-card">
             <div class="card-icon" style="background: rgba(139, 92, 246, 0.15);">⚡</div>
             <h3 class="card-title">Why It Exists</h3>
-            <p class="card-text">It is the fastest way for one logistics company to launch tracking, debug incidents, and maintain a coherent shipment history.</p>
+            <p class="card-text">Simple to build, easy to reason about, strongly consistent. Simpler debugging, predictable behavior, easier data integrity guarantees.</p>
         </div>
     </div>
 
@@ -1538,33 +1543,33 @@
             <div class="failure-card">
                 <div class="failure-icon">💥</div>
                 <h4>Single Point of Failure</h4>
-                <p>If the parcel database goes down, nobody sees the latest shipment state. Tracking, support, and partner dashboards all fail together.</p>
+                <p>If the database goes down, the system is unavailable. No fallback, no recovery path.</p>
             </div>
             <div class="failure-card">
                 <div class="failure-icon">📈</div>
                 <h4>Scalability Bottleneck</h4>
-                <p>Every scan, customer lookup, webhook, and SLA check hits the same system. One owner also becomes the performance ceiling.</p>
+                <p>All traffic flows through one system. The central node becomes the performance ceiling.</p>
             </div>
             <div class="failure-card">
                 <div class="failure-icon">🔒</div>
                 <h4>Trust Dependency</h4>
-                <p>Carriers, merchants, and customs all have to trust one operator's timestamps, data retention, and dispute handling.</p>
+                <p>Users must trust a single authority with their data, privacy, and service continuity.</p>
             </div>
             <div class="failure-card">
                 <div class="failure-icon">🛡️</div>
                 <h4>Security Blast Radius</h4>
-                <p>One breach can expose shipment history, partner integrations, and customer delivery details in one place.</p>
+                <p>One breach can expose all data. A single attack surface for the entire system.</p>
             </div>
             <div class="failure-card">
                 <div class="failure-icon">🚫</div>
                 <h4>Censorship & Control Risk</h4>
-                <p>The system owner can decide who may write events, which ones count, and even whether history can be rewritten.</p>
+                <p>Central authority can modify or restrict access unilaterally. Users have no recourse.</p>
             </div>
         </div>
     </div>
 
     <div class="callout-quote reveal">
-        Centralization is excellent until scale, geography, or shared ownership turn that simplicity into a bottleneck.
+        Centralized systems optimize for simplicity, not resilience.
     </div>
 </section>
 
@@ -1576,8 +1581,8 @@
         <span class="section-label">Chapter 02</span>
         <h2 class="section-title">Distributed Systems</h2>
         <p class="section-desc">
-            A distributed system spreads computation and data across multiple machines, but the same organization can still own the full platform.
-            It solves scale and latency without changing who controls the system.
+            A distributed system spreads computation and data across multiple machines, 
+            but control may still remain centralized. Distributed ≠ Decentralized.
         </p>
     </div>
 
@@ -1588,22 +1593,23 @@
     <!-- How it helps -->
     <div class="example-scenario reveal">
         <h4>📋 In Our Example</h4>
-        <p>Warehouse scanners in Mumbai, customers in Berlin, and support teams in London hit regional services. The workload is distributed, but one company still owns the control plane and data rules.</p>
-        <div class="scenario-flow">Client → Regional Edge → Multiple Services → Shared Data Layer</div>
+        <p>Users connect to different servers. All servers still use a central database. 
+            Load is distributed across multiple servers, but the DB remains the single source of truth.</p>
+        <div class="scenario-flow">Client → Load Balancer → Multiple Servers → Database</div>
     </div>
 
     <div class="grid-3 reveal">
         <div class="solution-card">
             <h4>📊 Improved Scalability</h4>
-            <p>Regional workers process scan events in parallel. The platform grows by adding nodes instead of vertically scaling one box.</p>
+            <p>Multiple servers handle requests. System scales horizontally by adding more nodes.</p>
         </div>
         <div class="solution-card">
             <h4>🛡️ Better Fault Tolerance</h4>
-            <p>If one API instance or worker crashes, the rest keep serving. Failures are more local, even though the owner remains the same.</p>
+            <p>Partial fault tolerance — if one server fails, others continue serving requests.</p>
         </div>
         <div class="solution-card">
             <h4>🌍 Reduced Latency</h4>
-            <p>Customers and partner apps read parcel status from closer regions, improving latency for a globally moving shipment.</p>
+            <p>Regional servers serve users from geographically closer locations.</p>
         </div>
     </div>
 
@@ -1612,21 +1618,21 @@
         <div class="grid-3">
             <div class="failure-card">
                 <h4>Database Bottleneck</h4>
-                <p>A shared database, queue, or control plane can still bottleneck the entire parcel network.</p>
+                <p>The database may still be a single point of failure and performance ceiling.</p>
             </div>
             <div class="failure-card">
                 <h4>Control Remains Central</h4>
-                <p>The merchant, carrier, and customs teams still depend on one owner to decide what the canonical shipment state is.</p>
+                <p>One organization still owns and controls the entire infrastructure.</p>
             </div>
             <div class="failure-card">
                 <h4>Failure Domains Exist</h4>
-                <p>Regional services may be distributed, but outages in shared dependencies still cascade across the system.</p>
+                <p>Shared dependencies can still create cascading failure scenarios.</p>
             </div>
         </div>
     </div>
 
     <div class="callout-quote reveal">
-        Distribution solves scale and latency. It does not solve shared ownership.
+        Distributed systems are often a stepping stone toward more complex architectures.
     </div>
 </section>
 
@@ -1638,8 +1644,8 @@
         <span class="section-label">Chapter 03</span>
         <h2 class="section-title">Decentralized Systems</h2>
         <p class="section-desc">
-            A decentralized system distributes both work and control across independent nodes. This becomes relevant when several organizations
-            need to write and verify the same parcel history without one operator owning the truth.
+            A decentralized system distributes both work and control across independent nodes. 
+            No single authority. Nodes operate independently and synchronize with each other.
         </p>
     </div>
 
@@ -1650,26 +1656,27 @@
     <!-- In our example -->
     <div class="example-scenario reveal">
         <h4>📋 In Our Example</h4>
-        <p>The carrier, customs authority, and merchant each run a node. Each can publish events for parcel <strong style="color: var(--text-heading);">PKG-88421</strong>, and the rest verify, replicate, and expose that history.</p>
-        <div class="scenario-flow">Partner Node → Event Proposal → Network Verification → Shared Parcel Timeline</div>
+        <p>User data exists across multiple nodes. Each node can handle reads and writes independently. 
+            Nodes synchronize with each other asynchronously.</p>
+        <div class="scenario-flow">User → Any Node (read/write) → Nodes sync async → All nodes converge</div>
     </div>
 
     <div class="grid-2 reveal">
         <div class="solution-card">
-            <h4>🔄 Institutional Fault Tolerance</h4>
-            <p>If one participant node fails or disconnects, the rest still preserve and serve the shipment timeline. The network does not depend on one operator.</p>
+            <h4>🔄 High Fault Tolerance</h4>
+            <p>If one node fails, others continue serving requests. The system degrades gracefully instead of collapsing entirely.</p>
         </div>
         <div class="solution-card">
-            <h4>🛡️ Shared Control</h4>
-            <p>No single company decides which parcel events are valid. Governance is pushed into protocol rules and participant agreement.</p>
+            <h4>🛡️ No Central Control</h4>
+            <p>No single authority owns the system. Multiple independent participants collaborate.</p>
         </div>
         <div class="solution-card">
-            <h4>🌍 Verifiable Audit Trail</h4>
-            <p>Every party keeps its own copy of the timeline. Disputes about delivery, customs holds, or lost parcels are easier to audit.</p>
+            <h4>🌍 Resilience to Outages</h4>
+            <p>Failures are isolated, not system-wide. A node going down is a local event, not a global catastrophe.</p>
         </div>
         <div class="solution-card">
-            <h4>🔒 Better Exit Flexibility</h4>
-            <p>Participants can join, leave, or replace infrastructure without handing the entire parcel history to a single platform owner.</p>
+            <h4>🔒 Better Fault Isolation</h4>
+            <p>Each node operates independently. Issues in one node don't cascade to others.</p>
         </div>
     </div>
 
@@ -1678,21 +1685,21 @@
         <div class="grid-3">
             <div class="failure-card">
                 <h4>Increased Complexity</h4>
-                <p>Operational overhead grows sharply. Protocol rules, keys, data replication, and node operations all become part of the design.</p>
+                <p>Operational overhead grows significantly. More moving parts to manage.</p>
             </div>
             <div class="failure-card">
                 <h4>Harder Consistency</h4>
-                <p>Strong consistency guarantees are much harder when carrier, customs, and merchant nodes are independent and geographically separated.</p>
+                <p>Strong consistency guarantees become much harder to achieve across nodes.</p>
             </div>
             <div class="failure-card">
                 <h4>Conflict Resolution</h4>
-                <p>Concurrent events like "delivered" and "held for inspection" can arrive from different authorities and need explicit rules.</p>
+                <p>Concurrent writes to different nodes create conflicts that must be resolved.</p>
             </div>
         </div>
     </div>
 
     <div class="callout-quote reveal">
-        Decentralization starts when the bottleneck is no longer compute — it is who gets to own the truth.
+        Decentralization replaces control with coordination.
     </div>
 </section>
 
@@ -1704,8 +1711,8 @@
         <span class="section-label">Chapter 04</span>
         <h2 class="section-title">Replication & Partitioning</h2>
         <p class="section-desc">
-            Replication and partitioning are the two core mechanics behind a scalable parcel system.
-            One keeps data alive during failures; the other keeps load spread across the network.
+            These are the two core techniques for scaling systems. Understanding the difference 
+            between them is critical for making the right architectural decisions.
         </p>
     </div>
 
@@ -1716,9 +1723,9 @@
                 <canvas id="mech-replication"></canvas>
             </div>
             <h3 class="card-title">Replication</h3>
-            <p class="card-text">Storing copies of the <strong>same shipment history</strong> across multiple nodes. This keeps parcel timelines available during regional failures.</p>
+            <p class="card-text">Storing copies of the <strong>same data</strong> across multiple nodes. Improves availability and enables fault tolerance.</p>
             <div class="example-scenario" style="margin-top: 1rem; padding: 1rem;">
-                <p style="font-size: 0.85rem;">The event log for parcel <strong style="color: var(--text-heading);">PKG-88421</strong> exists in Mumbai and Frankfurt. If Frankfurt fails, Mumbai still serves the timeline.</p>
+                <p style="font-size: 0.85rem;">User profile stored in Node A (India) and Node B (US). If Node A fails → Node B serves requests.</p>
             </div>
             <div style="margin-top: 0.8rem;">
                 <span class="comm-badge pro">✔ Improves availability</span>
@@ -1732,9 +1739,9 @@
                 <canvas id="mech-sharding"></canvas>
             </div>
             <h3 class="card-title">Partitioning (Sharding)</h3>
-            <p class="card-text">Splitting <strong>different parcels</strong> across nodes. Each node handles a subset using routing logic like <code style="color: var(--accent-teal); font-family: var(--font-mono); font-size: 0.85rem;">shipment_id % N</code>.</p>
+            <p class="card-text">Splitting <strong>different data</strong> across nodes. Each node handles a subset using routing logic like <code style="color: var(--accent-teal); font-family: var(--font-mono); font-size: 0.85rem;">user_id % N</code>.</p>
             <div class="example-scenario" style="margin-top: 1rem; padding: 1rem;">
-                <p style="font-size: 0.85rem;">Parcel <strong style="color: var(--text-heading);">PKG-88421</strong> goes to Shard A, parcel <strong style="color: var(--text-heading);">PKG-88422</strong> goes to Shard B. Data is split, not duplicated.</p>
+                <p style="font-size: 0.85rem;">User 1 → Node A, User 2 → Node B. Data is split, not duplicated.</p>
             </div>
             <div style="margin-top: 0.8rem;">
                 <span class="comm-badge pro">✔ Improves scalability</span>
@@ -1770,8 +1777,8 @@
     </div>
 
     <div class="callout-quote reveal">
-        Replication decides whether a parcel timeline survives failure. Partitioning decides where parcel traffic lives.
-        Without replication, every shard is still a single point of failure.
+        Replication improves availability, not scalability by itself. Partitioning improves scalability, but NOT availability alone. 
+        Without replication, each shard becomes a single point of failure.
     </div>
 </section>
 
@@ -1783,8 +1790,9 @@
         <span class="section-label">Chapter 05</span>
         <h2 class="section-title">Distributed Coordination</h2>
         <p class="section-desc">
-            Nodes must agree on shared state: who sequences writes, which peers are healthy, and which parcel event is accepted as valid.
-            Coordination is what turns many machines into one logical tracking system.
+            In distributed systems, nodes must agree on state: who is the leader, 
+            cluster configuration, and system state. Coordination ensures order in a 
+            system without central control.
         </p>
     </div>
 
@@ -1795,7 +1803,7 @@
                 <canvas id="mech-coordination"></canvas>
             </div>
             <h3 class="card-title">Consensus & Leader Election</h3>
-            <p class="card-text">Nodes must agree on who leads or how they sequence writes. Systems like ZooKeeper and etcd use consensus algorithms such as Raft to maintain agreement.</p>
+            <p class="card-text">Nodes must agree on who leads. Systems like ZooKeeper and etcd use consensus algorithms (like Raft) to maintain agreement.</p>
             <div class="examples-list">
                 <span class="example-tag">ZooKeeper</span>
                 <span class="example-tag">etcd</span>
@@ -1805,26 +1813,26 @@
         <div class="glass-card">
             <div class="card-icon" style="background: rgba(16, 185, 129, 0.15);">🔧</div>
             <h3 class="card-title">Common Use Cases</h3>
-            <p class="card-text">In the parcel network, coordination is needed for several non-negotiable control paths.</p>
+            <p class="card-text">Coordination is needed for multiple critical system functions.</p>
             <div style="margin-top: 1rem;">
                 <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-size: 0.9rem;">
-                    <strong style="color: var(--text-primary);">Leader Election</strong> — Choosing who sequences parcel events
+                    <strong style="color: var(--text-primary);">Leader Election</strong> — Deciding which node coordinates
                 </div>
                 <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-size: 0.9rem;">
-                    <strong style="color: var(--text-primary);">Service Discovery</strong> — Finding healthy regional or partner nodes
+                    <strong style="color: var(--text-primary);">Service Discovery</strong> — Finding available services
                 </div>
                 <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass); color: var(--text-secondary); font-size: 0.9rem;">
-                    <strong style="color: var(--text-primary);">Configuration Management</strong> — Sharing event schema and routing rules
+                    <strong style="color: var(--text-primary);">Configuration Management</strong> — Shared config across nodes
                 </div>
                 <div style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">
-                    <strong style="color: var(--text-primary);">Liveness Tracking</strong> — Monitoring which participant nodes are online
+                    <strong style="color: var(--text-primary);">Liveness Tracking</strong> — Monitoring node health
                 </div>
             </div>
         </div>
     </div>
 
     <div class="callout-quote reveal">
-        In practice, coordination decides whether "customs-cleared" is accepted once, in the right order, and visible to everyone.
+        Coordination ensures order in a system without central control.
     </div>
 </section>
 
@@ -1836,16 +1844,17 @@
         <span class="section-label">Chapter 06</span>
         <h2 class="section-title">Communication Patterns</h2>
         <p class="section-desc">
-            The same parcel network can use several communication patterns at once. Each one fits a different operational need.
+            How do nodes talk to each other? Four distinct communication models, 
+            each with different trade-offs in coupling, latency, and complexity.
         </p>
     </div>
 
     <div class="grid-2 reveal">
         <div class="glass-card comm-card">
             <h3 class="card-title">⚡ Synchronous</h3>
-            <p class="card-text">Direct request-response communication. A customer app asks for the latest parcel state and waits for a reply. Simple, but tightly coupled.</p>
+            <p class="card-text">Direct request-response communication. Client waits for server reply. Simple but creates tight coupling and cascading failures.</p>
             <div class="example-scenario" style="margin-top: 0.8rem; padding: 0.8rem;">
-                <div class="scenario-flow" style="margin-top: 0;">Tracking App → Parcel API → Response</div>
+                <div class="scenario-flow" style="margin-top: 0;">Service A → Service B → Response</div>
             </div>
             <div>
                 <span class="comm-badge pro">✔ Simple</span>
@@ -1856,9 +1865,9 @@
         </div>
         <div class="glass-card comm-card">
             <h3 class="card-title">📨 Asynchronous</h3>
-            <p class="card-text">Messages and events instead of direct calls. Warehouse scans and carrier updates flow through queues and event streams.</p>
+            <p class="card-text">Messages and events instead of direct calls. Producers and consumers operate independently through message brokers.</p>
             <div class="example-scenario" style="margin-top: 0.8rem; padding: 0.8rem;">
-                <div class="scenario-flow" style="margin-top: 0;">Scanner → Event Bus → Tracking Processor</div>
+                <div class="scenario-flow" style="margin-top: 0;">Producer → Queue → Consumer</div>
             </div>
             <div>
                 <span class="comm-badge pro">✔ Decoupled</span>
@@ -1869,9 +1878,9 @@
         </div>
         <div class="glass-card comm-card">
             <h3 class="card-title">🔗 Peer-to-Peer (P2P)</h3>
-            <p class="card-text">Partner nodes communicate directly with each other. The carrier can exchange events or proofs with customs or merchant nodes without one central API owner.</p>
+            <p class="card-text">Nodes communicate directly with each other — no central coordinator needed. Every node is both client and server.</p>
             <div class="examples-list">
-                <span class="example-tag">Partner Networks</span>
+                <span class="example-tag">BitTorrent</span>
                 <span class="example-tag">Blockchain Systems</span>
             </div>
             <div>
@@ -1881,10 +1890,10 @@
         </div>
         <div class="glass-card comm-card">
             <h3 class="card-title">🌊 Gossip Protocol</h3>
-            <p class="card-text">Nodes randomly share state with other nodes. This is useful for spreading node membership, health, and recent parcel-event ranges without a central coordinator.</p>
+            <p class="card-text">Nodes randomly share state with other nodes. Each node shares with a few peers, those peers propagate further. Information spreads probabilistically.</p>
             <div class="examples-list">
                 <span class="example-tag">Apache Cassandra</span>
-                <span class="example-tag">Parcel Node Meshes</span>
+                <span class="example-tag">Distributed Clusters</span>
             </div>
             <div>
                 <span class="comm-badge pro">✔ Eventually consistent</span>
@@ -1907,7 +1916,8 @@
         <span class="section-label">Chapter 07</span>
         <h2 class="section-title">CAP Theorem & Eventual Consistency</h2>
         <p class="section-desc">
-            Network partitions are inevitable. When they happen, a parcel network must choose whether to reject updates to stay correct or accept updates and reconcile later.
+            In distributed systems, network partitions are inevitable. When a partition occurs, 
+            the system must choose between consistency and availability — you can't have both.
         </p>
     </div>
 
@@ -1928,16 +1938,16 @@
             </div>
             <div class="cap-detail" id="cap-detail">
                 <h4 style="color: var(--accent-blue);">CP — Consistency + Partition Tolerance</h4>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject requests to maintain correctness. The network may refuse a shipment update during a partition rather than risk diverging histories.</p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject requests to maintain correctness. System may become unavailable during partitions.</p>
                 <ul>
                     <li>Strong correctness guarantee</li>
                     <li>Reduced availability during partitions</li>
-                    <li>Customs release, payments, distributed locks</li>
+                    <li>Banking transactions, distributed locks</li>
                 </ul>
                 <div class="examples-list" style="margin-top: 1rem;">
                     <span class="example-tag">ZooKeeper</span>
                     <span class="example-tag">etcd</span>
-                    <span class="example-tag">Settlement</span>
+                    <span class="example-tag">Banking</span>
                 </div>
             </div>
         </div>
@@ -1946,20 +1956,20 @@
     <!-- In our example -->
     <div class="example-scenario reveal" style="margin-top: 2rem;">
         <h4>📋 In Our Example</h4>
-        <p>Customs in Germany marks parcel <strong style="color: var(--text-heading);">PKG-88421</strong> as <strong style="color: var(--text-heading);">Held for Inspection</strong>. During a partition, a customer app in India may still show <strong style="color: var(--text-heading);">In Transit</strong> for a short time.</p>
+        <p>User updates name in Region A. Region B may still show the old value temporarily — this is the cost of choosing availability over consistency.</p>
     </div>
 
     <!-- Eventual Consistency -->
     <div class="ec-visual reveal" style="margin-top: 2rem;">
         <h4>🔄 Eventual Consistency</h4>
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Data may be temporarily inconsistent but will converge over time. In parcel systems this usually means asynchronous replication,
-            event propagation, and background repair. Users may briefly see stale parcel status or overlapping shipment events.
+            Data may be temporarily inconsistent but will converge over time. Uses asynchronous replication, 
+            gossip protocols, and anti-entropy processes. Users may observe temporary stale reads and conflicting updates.
         </p>
         <div class="ec-timeline">
             <div class="ec-step">
                 <div class="ec-dot">✏️</div>
-                <div class="ec-label">Customs update<br>accepted</div>
+                <div class="ec-label">Write occurs<br>on Node A</div>
             </div>
             <div class="ec-step">
                 <div class="ec-dot">📡</div>
@@ -1967,11 +1977,11 @@
             </div>
             <div class="ec-step">
                 <div class="ec-dot">🔄</div>
-                <div class="ec-label">Peer/node<br>propagation</div>
+                <div class="ec-label">Gossip<br>propagation</div>
             </div>
             <div class="ec-step">
                 <div class="ec-dot">✅</div>
-                <div class="ec-label">Shared parcel<br>timeline restored</div>
+                <div class="ec-label">Eventually<br>consistent</div>
             </div>
         </div>
     </div>
@@ -1989,8 +1999,8 @@
         <span class="section-label">Chapter 08</span>
         <h2 class="section-title">Conflict Resolution</h2>
         <p class="section-desc">
-            Conflicts happen when different participants publish incompatible shipment events.
-            What if the carrier says "Delivered" while customs says "Held for Inspection"?
+            Concurrent updates in different regions create conflicts. 
+            Node A writes "Alice", Node B writes "Alicia" — how does the system resolve this?
         </p>
     </div>
 
@@ -1998,35 +2008,35 @@
     <div class="grid-2 reveal">
         <div class="glass-card">
             <h3 class="card-title" style="color: var(--accent-amber);">⏱️ 1. Last Write Wins</h3>
-            <p class="card-text">Simplest approach — latest timestamp wins. Easy to implement, but important parcel evidence can be lost.</p>
-            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Carrier writes "Delivered" at 10:01, customs writes "Held" at 10:02 → "Held" wins. The delivery signal is discarded.</p>
+            <p class="card-text">Simplest approach — latest timestamp wins. But data loss is possible.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">India writes "Alice" at 10:01, US writes "Alicia" at 10:02 → "Alicia" wins. "Alice" is lost.</p>
         </div>
         <div class="glass-card">
             <h3 class="card-title" style="color: var(--accent-violet);">🔢 2. Versioning / Vector Clocks</h3>
-            <p class="card-text">Detect conflicting updates and track causality. The system preserves both versions until a business rule resolves them.</p>
-            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Carrier node and customs node both extend the same parcel version differently → conflict detected, both retained.</p>
+            <p class="card-text">Detect conflicting updates and track causality. System preserves both versions.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Node A → v1 → "Alice", Node B → v1 → "Alicia" → Conflict detected, both preserved.</p>
         </div>
         <div class="glass-card">
             <h3 class="card-title" style="color: var(--accent-teal);">🔀 3. Merge Strategies</h3>
-            <p class="card-text">Combine fields intelligently. This works when updates affect different shipment fields instead of the same fact.</p>
-            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Keep carrier ETA update, preserve customs clearance state — both can coexist in the final parcel record.</p>
+            <p class="card-text">Combine fields intelligently. Works when updates touch different fields.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Keep latest email, merge address fields — no conflict when updates are orthogonal.</p>
         </div>
         <div class="glass-card">
             <h3 class="card-title" style="color: var(--accent-blue);">👤 4. Manual Resolution</h3>
-            <p class="card-text">An operator or participant resolves conflicts explicitly. Most accurate, but slow and operationally expensive.</p>
-            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Support sees both customs and carrier events, then marks one as authoritative for the parcel timeline.</p>
+            <p class="card-text">User resolves conflicts explicitly. Most accurate but slower.</p>
+            <p class="card-text" style="margin-top: 0.5rem; font-style: italic;">Git: two developers edit the same line → merge conflict → developer chooses.</p>
         </div>
     </div>
 
     <div class="callout-quote reveal">
-        Conflict resolution is a business rule expressed in software.
+        Conflict resolution is a business decision, not just a technical one.
     </div>
 
     <!-- Interactive Sandbox -->
     <div class="sandbox-container reveal" style="margin-top: 3rem;">
         <h3 style="font-size: 1.3rem; margin-bottom: 0.3rem;">🧪 Interactive Conflict Sandbox</h3>
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
-            Simulate a partition between two parcel-network participants. Edit shipment status independently, then reconnect to see conflict resolution in action.
+            Simulate a network partition between two nodes. Edit data independently, then reconnect to see conflict resolution in action.
         </p>
 
         <div class="sandbox-controls">
@@ -2045,9 +2055,9 @@
 
         <div class="nodes-area">
             <div class="sandbox-node in-sync" id="node-india">
-                <h4>📦 Carrier Node</h4>
-                <div class="node-region">Origin logistics partner</div>
-                <input type="text" id="india-input" value="In Transit" />
+                <h4>🇮🇳 Node India</h4>
+                <div class="node-region">Mumbai Region</div>
+                <input type="text" id="india-input" value="Alice" />
                 <br>
                 <button class="save-btn" onclick="saveNode('india')">Save</button>
                 <br>
@@ -2061,9 +2071,9 @@
             </div>
 
             <div class="sandbox-node in-sync" id="node-us">
-                <h4>🛃 Customs Node</h4>
-                <div class="node-region">Destination border authority</div>
-                <input type="text" id="us-input" value="In Transit" />
+                <h4>🇺🇸 Node US</h4>
+                <div class="node-region">Virginia Region</div>
+                <input type="text" id="us-input" value="Alice" />
                 <br>
                 <button class="save-btn" onclick="saveNode('us')">Save</button>
                 <br>
@@ -2076,8 +2086,8 @@
             <h4>⚠️ Conflict Detected!</h4>
             <p style="color: var(--text-secondary); font-size: 0.9rem;" id="conflict-msg">Two different versions exist after reconnection.</p>
             <div class="conflict-resolve-btns" id="conflict-btns">
-                <button class="resolve-btn-india" onclick="resolveConflict('india')">Keep Carrier Version</button>
-                <button class="resolve-btn-us" onclick="resolveConflict('us')">Keep Customs Version</button>
+                <button class="resolve-btn-india" onclick="resolveConflict('india')">Keep India Version</button>
+                <button class="resolve-btn-us" onclick="resolveConflict('us')">Keep US Version</button>
             </div>
         </div>
 
@@ -2087,33 +2097,34 @@
 
 <div class="section-divider"></div>
 
-<!-- ===== SECTION 9: WHY DISTRIBUTED IS NOT ENOUGH ===== -->
+<!-- ===== SECTION 9: DISTRIBUTED VS DECENTRALIZED ===== -->
 <section id="dist-vs-dec">
     <div class="reveal">
         <span class="section-label">Chapter 09</span>
-        <h2 class="section-title">Why Distributed Isn’t Enough</h2>
+        <h2 class="section-title">Distributed vs. Decentralized</h2>
         <p class="section-desc">
-            A distributed parcel platform is often enough inside one company. It stops being enough when the merchant, carrier, customs authority, and insurer all need to write to the same shipment history.
+            These terms are often used interchangeably — but they are NOT the same. 
+            The key difference lies in <strong style="color: var(--text-heading);">control and ownership</strong>.
         </p>
     </div>
 
     <div class="grid-2 reveal">
         <div class="glass-card" style="border-left: 3px solid var(--accent-blue);">
-            <h3 class="card-title" style="color: var(--accent-blue);">🔹 Scale Is Solved</h3>
-            <p class="card-text" style="margin-bottom: 0.8rem;">A distributed design handles traffic, regional latency, and service isolation. It is strong on <strong>architecture and scaling</strong>, but still assumes one operator owns the system.</p>
+            <h3 class="card-title" style="color: var(--accent-blue);">🔹 Distributed System</h3>
+            <p class="card-text" style="margin-bottom: 0.8rem;">Work spread across nodes. Focus is on <strong>architecture and scaling</strong>. Control may still be centralized. Single organization owns the system.</p>
             <div class="examples-list">
-                <span class="example-tag">Regional APIs</span>
-                <span class="example-tag">Event Pipelines</span>
+                <span class="example-tag">Microservices</span>
+                <span class="example-tag">Cloud Services (AWS)</span>
                 <span class="example-tag">Distributed DBs</span>
             </div>
         </div>
         <div class="glass-card" style="border-left: 3px solid var(--accent-violet);">
-            <h3 class="card-title" style="color: var(--accent-violet);">🔹 Control Is Not</h3>
-            <p class="card-text" style="margin-bottom: 0.8rem;">The harder question becomes <strong>who owns the audit trail</strong>, who can rewrite history, and who defines access rules. That is where decentralization becomes relevant.</p>
+            <h3 class="card-title" style="color: var(--accent-violet);">🔹 Decentralized System</h3>
+            <p class="card-text" style="margin-bottom: 0.8rem;">Work AND control spread across nodes. Focus is on <strong>ownership and trust</strong>. Multiple independent parties. Trustless or minimized trust.</p>
             <div class="examples-list">
-                <span class="example-tag">Shared Governance</span>
-                <span class="example-tag">Auditability</span>
-                <span class="example-tag">Multi-Party Trust</span>
+                <span class="example-tag">Bitcoin</span>
+                <span class="example-tag">Ethereum</span>
+                <span class="example-tag">BitTorrent</span>
             </div>
         </div>
     </div>
@@ -2122,38 +2133,38 @@
         <table class="comparison-table">
             <thead>
                 <tr>
-                    <th>Question</th>
-                    <th style="color: var(--accent-blue);">Distributed Answer</th>
-                    <th style="color: var(--accent-violet);">Decentralized Answer</th>
+                    <th>Aspect</th>
+                    <th style="color: var(--accent-blue);">Distributed</th>
+                    <th style="color: var(--accent-violet);">Decentralized</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><strong style="color: var(--text-primary);">Who owns the history?</strong></td>
-                    <td>One organization</td>
-                    <td>Shared across participants</td>
+                    <td><strong style="color: var(--text-primary);">Work</strong></td>
+                    <td>Spread across nodes</td>
+                    <td>Spread across nodes</td>
                 </tr>
                 <tr>
-                    <td><strong style="color: var(--text-primary);">Who can reject writes?</strong></td>
-                    <td>Platform owner</td>
-                    <td>Protocol + participant rules</td>
+                    <td><strong style="color: var(--text-primary);">Control</strong></td>
+                    <td>Centralized</td>
+                    <td>Distributed</td>
                 </tr>
                 <tr>
-                    <td><strong style="color: var(--text-primary);">What if one party fails?</strong></td>
-                    <td>Owner outage can dominate</td>
-                    <td>Other participants continue</td>
+                    <td><strong style="color: var(--text-primary);">Ownership</strong></td>
+                    <td>Single organization</td>
+                    <td>Multiple parties</td>
                 </tr>
                 <tr>
-                    <td><strong style="color: var(--text-primary);">What kind of trust is assumed?</strong></td>
-                    <td>Trust the owner</td>
-                    <td>Minimize trust in any one owner</td>
+                    <td><strong style="color: var(--text-primary);">Trust Model</strong></td>
+                    <td>Trusted</td>
+                    <td>Trustless / minimized</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="callout-quote reveal">
-        Distribution spreads workload. Decentralization spreads authority.
+        All decentralized systems are distributed, but not all distributed systems are decentralized.
     </div>
 </section>
 
@@ -2165,7 +2176,8 @@
         <span class="section-label">Chapter 10</span>
         <h2 class="section-title">When to Choose What</h2>
         <p class="section-desc">
-            The right architecture depends on the constraint. For the same parcel use case, the correct answer changes as ownership and trust requirements change.
+            Choosing the right architecture isn't about which is "best" — it's about which is 
+            right for your specific constraints. Use this decision framework.
         </p>
     </div>
 
@@ -2173,29 +2185,29 @@
     <div class="sys-compare reveal">
         <div class="sys-col centralized">
             <h3 style="color: var(--accent-rose);">🟢 Choose Centralized</h3>
-            <div class="sys-subtitle">One operator owns the flow</div>
-            <div class="sys-item"><strong>Use case</strong>Single retailer tracks its own parcels</div>
-            <div class="sys-item"><strong>Consistency</strong>Immediate correctness matters most</div>
-            <div class="sys-item"><strong>Priority</strong>Simplicity over partner autonomy</div>
+            <div class="sys-subtitle">When simplicity is priority</div>
+            <div class="sys-item"><strong>Scale</strong>System is small</div>
+            <div class="sys-item"><strong>Consistency</strong>Strong consistency required</div>
+            <div class="sys-item"><strong>Priority</strong>Simplicity over resilience</div>
         </div>
         <div class="sys-col distributed">
             <h3 style="color: var(--accent-blue);">🔵 Choose Distributed</h3>
-            <div class="sys-subtitle">One operator needs global scale</div>
-            <div class="sys-item"><strong>Use case</strong>Global courier runs regional tracking infrastructure</div>
-            <div class="sys-item"><strong>Users</strong>Customers and staff are worldwide</div>
-            <div class="sys-item"><strong>Latency</strong>Regional reads and event throughput matter</div>
+            <div class="sys-subtitle">When scaling is needed</div>
+            <div class="sys-item"><strong>Scale</strong>Scaling is needed</div>
+            <div class="sys-item"><strong>Users</strong>Global users exist</div>
+            <div class="sys-item"><strong>Latency</strong>Latency matters</div>
         </div>
         <div class="sys-col decentralized">
             <h3 style="color: var(--accent-violet);">🟣 Choose Decentralized</h3>
-            <div class="sys-subtitle">Several operators share the workflow</div>
-            <div class="sys-item"><strong>Use case</strong>Merchant, carrier, customs, insurer share parcel truth</div>
-            <div class="sys-item"><strong>Control</strong>No single party should own the audit trail</div>
-            <div class="sys-item"><strong>Resilience</strong>Shared governance and verifiability matter</div>
+            <div class="sys-subtitle">When trust matters</div>
+            <div class="sys-item"><strong>Trust</strong>Trust boundaries exist</div>
+            <div class="sys-item"><strong>Control</strong>No single authority should control</div>
+            <div class="sys-item"><strong>Resilience</strong>High resilience required</div>
         </div>
     </div>
 
     <div class="callout-quote reveal" style="margin-top: 2.5rem; border-left-color: var(--accent-teal);">
-        <strong style="color: var(--accent-teal);">Practical Heuristic:</strong> Start centralized. Distribute when scale demands it. Decentralize only when control itself becomes the bottleneck.
+        <strong style="color: var(--accent-teal);">Practical Heuristic:</strong> Start centralized → scale distributed → decentralize only if necessary.
     </div>
 
     <!-- Decision Flow -->
@@ -2208,7 +2220,7 @@
             <div class="decision-answers">
                 <div class="decision-answer yes">
                     <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
-                    <p>Use <strong>Centralized</strong> or <strong>CP Distributed</strong>. Inventory, parcel settlement, and customs release flows fit here.</p>
+                    <p>Use <strong>Centralized</strong> or <strong>CP Distributed</strong>. Banking, inventory, financial ledgers.</p>
                 </div>
                 <div class="decision-answer no">
                     <div class="answer-label" style="color: var(--accent-amber);">→ Not always</div>
@@ -2225,7 +2237,7 @@
             <div class="decision-answers">
                 <div class="decision-answer yes">
                     <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
-                    <p>Use <strong>Distributed</strong>. Global parcel APIs, microservices, and event-driven logistics platforms fit here.</p>
+                    <p>Use <strong>Distributed</strong>. Microservices, cloud-native apps, CDNs.</p>
                 </div>
                 <div class="decision-answer no">
                     <div class="answer-label" style="color: var(--accent-amber);">❌ No</div>
@@ -2242,7 +2254,7 @@
             <div class="decision-answers">
                 <div class="decision-answer yes">
                     <div class="answer-label" style="color: var(--accent-emerald);">✅ Yes</div>
-                    <p>Use <strong>Decentralized</strong>. Multi-party parcel networks, shared ledgers, and open logistics protocols fit here.</p>
+                    <p>Use <strong>Decentralized</strong>. Blockchain, P2P networks, DAOs, open protocols.</p>
                 </div>
                 <div class="decision-answer no">
                     <div class="answer-label" style="color: var(--accent-amber);">→ Partial trust</div>
@@ -2270,7 +2282,7 @@
         <div class="misconception-card">
             <div class="myth-label">❌ Myth</div>
             <h4>Distributed = Decentralized</h4>
-            <p>Distributed is about where work runs. Decentralized is about who owns the rules and the audit trail. Those are different design problems.</p>
+            <p>Distributed is about architecture (spreading work). Decentralized is about control (who owns the system). They are fundamentally different concerns.</p>
         </div>
         <div class="misconception-card">
             <div class="myth-label">❌ Myth</div>
@@ -2290,7 +2302,7 @@
         <div class="misconception-card">
             <div class="myth-label">❌ Myth</div>
             <h4>Eventual Consistency = Incorrect Forever</h4>
-            <p>Eventually consistent systems converge. Parcel timelines, DNS, social feeds, and CDNs can all tolerate temporary divergence and still recover correctly.</p>
+            <p>Eventually consistent systems converge. DNS, social media, CDNs — all run on eventual consistency and serve billions of users.</p>
         </div>
     </div>
 
@@ -2307,7 +2319,8 @@
         <span class="section-label">Chapter 12</span>
         <h2 class="section-title">Final Summary</h2>
         <p class="section-desc">
-            Modern systems evolve in response to real constraints. These are the core ideas to keep after walking the parcel example end to end.
+            Modern systems evolve in response to real-world pressures. 
+            The core insights to carry forward from this exploration.
         </p>
     </div>
 
@@ -2316,20 +2329,20 @@
         <div class="sys-col centralized">
             <h3 style="color: var(--accent-rose);">🟢 Centralized</h3>
             <div class="sys-subtitle">Simplicity & Consistency</div>
-            <div class="sys-item">Best when one company owns the parcel workflow</div>
-            <div class="sys-item">Strong correctness with low operational overhead</div>
+            <div class="sys-item">Prioritize simplicity and strong consistency</div>
+            <div class="sys-item">Best for small-scale, trusted environments</div>
         </div>
         <div class="sys-col distributed">
             <h3 style="color: var(--accent-blue);">🔵 Distributed</h3>
             <div class="sys-subtitle">Scale & Performance</div>
-            <div class="sys-item">Best when one owner needs global parcel scale</div>
-            <div class="sys-item">Improves throughput, latency, and fault isolation</div>
+            <div class="sys-item">Enable scale and performance through horizontal growth</div>
+            <div class="sys-item">Best for growing, global applications</div>
         </div>
         <div class="sys-col decentralized">
             <h3 style="color: var(--accent-violet);">🟣 Decentralized</h3>
-            <div class="sys-subtitle">Shared Control & Auditability</div>
-            <div class="sys-item">Best when multiple parcel participants need verifiable truth</div>
-            <div class="sys-item">Reduces dependency on one owner, not on complexity</div>
+            <div class="sys-subtitle">Resilience & Trust Minimization</div>
+            <div class="sys-item">Enable resilience and eliminate single authorities</div>
+            <div class="sys-item">Best for trustless, multi-party systems</div>
         </div>
     </div>
 
@@ -2347,17 +2360,17 @@
         <div class="takeaway-card">
             <div class="takeaway-num">03</div>
             <h4>Coordination is essential</h4>
-            <p>Without agreement mechanisms, parcel events arrive out of order and shared truth breaks down fast.</p>
+            <p>Without agreement mechanisms, distributed nodes would descend into chaos.</p>
         </div>
         <div class="takeaway-card">
             <div class="takeaway-num">04</div>
             <h4>Consistency is a trade-off</h4>
-            <p>It is a deliberate choice. In parcel systems, correctness, latency, and uptime constantly trade against each other.</p>
+            <p>It's not a guarantee — it's a deliberate choice with costs and benefits.</p>
         </div>
     </div>
 
     <div class="callout-quote reveal" style="margin-top: 2rem; border-left-color: var(--accent-teal);">
-        <strong style="color: var(--accent-teal);">The goal is not to pick the most advanced architecture — but the one that matches the real constraint.</strong>
+        <strong style="color: var(--accent-teal);">The goal is not to pick the "best" architecture — but the right one for your constraints.</strong>
     </div>
 </section>
 
@@ -3122,31 +3135,31 @@ function showCapDetail(type) {
     if (type === 'cp') {
         detail.innerHTML = `
             <h4 style="color: var(--accent-blue);">CP — Consistency + Partition Tolerance</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject requests to maintain correctness. The network may refuse a shipment update during a partition rather than risk diverging histories.</p>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Reject requests to maintain correctness. System may become unavailable during partitions.</p>
             <ul>
                 <li>Strong correctness guarantee</li>
                 <li>Reduced availability during partitions</li>
-                <li>Customs release, payments, distributed locks</li>
+                <li>Banking transactions, distributed locks</li>
             </ul>
             <div class="examples-list" style="margin-top: 1rem;">
                 <span class="example-tag">ZooKeeper</span>
                 <span class="example-tag">etcd</span>
-                <span class="example-tag">Settlement</span>
+                <span class="example-tag">Banking</span>
             </div>
         `;
     } else {
         detail.innerHTML = `
             <h4 style="color: var(--accent-violet);">AP — Availability + Partition Tolerance</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">Accept requests, may return stale data. The parcel network keeps responding during partitions and reconciles later.</p>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Accept requests, may return stale data. System stays responsive even during partitions.</p>
             <ul>
                 <li>High availability, always responsive</li>
                 <li>Temporary inconsistency between nodes</li>
-                <li>Tracking feeds, DNS, content platforms</li>
+                <li>Social media, DNS, content platforms</li>
             </ul>
             <div class="examples-list" style="margin-top: 1rem;">
                 <span class="example-tag">Cassandra</span>
                 <span class="example-tag">DynamoDB</span>
-                <span class="example-tag">Tracking APIs</span>
+                <span class="example-tag">DNS</span>
             </div>
         `;
     }
@@ -3157,13 +3170,9 @@ function showCapDetail(type) {
 // ========================================
 (function initSandbox() {
     let networkUp = true;
-    const labels = {
-        india: 'Carrier',
-        us: 'Customs'
-    };
     const state = {
-        india: { value: 'In Transit', ts: 0 },
-        us: { value: 'In Transit', ts: 0 }
+        india: { value: 'Alice', ts: 0 },
+        us: { value: 'Alice', ts: 0 }
     };
 
     const indiaInput = document.getElementById('india-input');
@@ -3186,7 +3195,7 @@ function showCapDetail(type) {
         logEl.innerHTML = `<div class="log-entry"><span class="log-time">[${time}]</span> ${msg}</div>` + logEl.innerHTML;
     }
 
-    log('System initialized. Carrier and customs nodes are in sync.');
+    log('System initialized. Both nodes in sync.');
 
     window.togglePartition = function() {
         networkUp = !networkUp;
@@ -3215,7 +3224,7 @@ function showCapDetail(type) {
         const timeEl = nodeId === 'india' ? indiaTime : usTime;
         timeEl.textContent = new Date(now).toLocaleTimeString();
 
-        log(`✏️ ${labels[nodeId]} node saved: "${newVal}"`);
+        log(`✏️ Node ${nodeId.toUpperCase()} saved: "${newVal}"`);
 
         if (networkUp) {
             const other = nodeId === 'india' ? 'us' : 'india';
@@ -3224,7 +3233,7 @@ function showCapDetail(type) {
             (nodeId === 'india' ? usTime : indiaTime).textContent = new Date(now).toLocaleTimeString();
             setStatus('india', 'sync');
             setStatus('us', 'sync');
-            log(`🔄 Synced to ${labels[other]} node: "${newVal}"`);
+            log(`🔄 Synced to ${other.toUpperCase()}: "${newVal}"`);
         }
     };
 
@@ -3248,14 +3257,14 @@ function showCapDetail(type) {
             usInput.value = winVal;
             setStatus('india', 'sync');
             setStatus('us', 'sync');
-            log(`⚖️ LWW resolved: "${winVal}" (${labels[winner]} won, ${labels[loser]} data overwritten)`);
+            log(`⚖️ LWW resolved: "${winVal}" (${winner.toUpperCase()} won, ${loser.toUpperCase()} data overwritten)`);
         } else if (strategy === 'version') {
             setStatus('india', 'conflict');
             setStatus('us', 'conflict');
-            conflictMsg.textContent = `Carrier: "${state.india.value}" vs Customs: "${state.us.value}" — Choose which parcel status to keep.`;
+            conflictMsg.textContent = `India: "${state.india.value}" vs US: "${state.us.value}" — Choose which to keep.`;
             conflictPanel.classList.add('show');
             networkBtn.disabled = true;
-            log(`⚠️ Conflict detected! Carrier="${state.india.value}" vs Customs="${state.us.value}". Manual resolution required.`);
+            log(`⚠️ Conflict detected! India="${state.india.value}" vs US="${state.us.value}". Manual resolution required.`);
         } else {
             // Merge — just keep both values concatenated for demo
             const merged = `${state.india.value} + ${state.us.value}`;
@@ -3279,7 +3288,7 @@ function showCapDetail(type) {
         setStatus('us', 'sync');
         conflictPanel.classList.remove('show');
         networkBtn.disabled = false;
-        log(`👤 Manually resolved: kept ${labels[winnerId]} version → "${winVal}"`);
+        log(`👤 Manually resolved: kept ${winnerId.toUpperCase()} version → "${winVal}"`);
     };
 
     function setStatus(nodeId, status) {
